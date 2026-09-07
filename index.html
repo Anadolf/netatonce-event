@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invigning & Minimässa - Framtidens arbetsplats</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f1f35 0%, #1a2f4a 50%, #142744 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a2f4a 0%, #0f1f35 100%);
+            color: white;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border-bottom: 4px solid #ff9900;
+        }
+
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .intro-box {
+            background: rgba(255, 153, 0, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-left: 5px solid #ff9900;
+        }
+
+        .intro-box p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+        }
+
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-card {
+            background: rgba(30, 50, 80, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-top: 4px solid #00d4ff;
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+            border-top-color: #ff9900;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #1a3a5a 0%, #0f2235 100%);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #00d4ff;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .section-card.active .section-icon {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+
+        .section-card.active .section-content {
+            max-height: 600px;
+            padding: 1.5rem;
+        }
+
+        .section-content p {
+            font-size: 0.95rem;
+            color: #c0c0c0;
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+
+        .section-content ul {
+            list-style: none;
+            margin-bottom: 1rem;
+            margin-left: 0;
+        }
+
+        .section-content li {
+            padding-left: 1.5rem;
+            margin-bottom: 0.7rem;
+            position: relative;
+            font-size: 0.95rem;
+            color: #c0c0c0;
+        }
+
+        .section-content li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .product-highlight {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+        }
+
+        .product-highlight strong {
+            color: #00d4ff;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #00d4ff 0%, #00a8cc 100%);
+            color: #0f1f35;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+            background: linear-gradient(135deg, #ff9900 0%, #ffb333 100%);
+        }
+
+        .registration-section {
+            background: rgba(30, 50, 80, 0.8);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid #ff9900;
+        }
+
+        .registration-section h2 {
+            color: #ff9900;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .registration-section p {
+            color: #c0c0c0;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .registration-button {
+            background: linear-gradient(135deg, #ff9900 0%, #ffb333 100%);
+            color: #0f1f35;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+
+        .registration-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 153, 0, 0.4);
+        }
+
+        .products-section {
+            background: rgba(30, 50, 80, 0.6);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .products-section h2 {
+            color: #00d4ff;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(255, 153, 0, 0.1) 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid #00d4ff;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+            border-color: #ff9900;
+        }
+
+        .product-card h3 {
+            color: #ff9900;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .product-card p {
+            color: #c0c0c0;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .product-link {
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .product-link:hover {
+            color: #ff9900;
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #0f1f35;
+            padding: 2rem;
+            text-align: center;
+            color: #888;
+            margin-top: 3rem;
+            border-top: 2px solid #ff9900;
+        }
+
+        .exhibitors-section {
+            background: rgba(30, 50, 80, 0.6);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .exhibitors-section h2 {
+            color: #00d4ff;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+        }
+
+        .exhibitors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .exhibitor-card {
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.15) 0%, rgba(0, 212, 255, 0.15) 100%);
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 2px solid #ff9900;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .exhibitor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 153, 0, 0.3);
+            border-color: #00d4ff;
+        }
+
+        .exhibitor-card h4 {
+            color: #ff9900;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .exhibitor-logo {
+            height: 48px;
+            max-width: 170px;
+            width: auto;
+            margin: 0 auto 1rem;
+            object-fit: contain;
+            display: block;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .sections-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 2rem 1rem;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+
+        #panelOverviewModal {
+            z-index: 1000;
+        }
+
+        .modal.company-modal {
+            z-index: 1001;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a2f4a 0%, #0f2235 100%);
+            color: #e0e0e0;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+            border-top: 4px solid #ff9900;
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff9900;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.2);
+            color: #00d4ff;
+        }
+
+        .modal-title {
+            color: #ff9900;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        .modal-content a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .modal-content a:hover {
+            text-decoration: underline;
+        }
+
+        .panel-link {
+            cursor: pointer;
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .panel-link:hover {
+            color: #ff9900;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Logo placeholder - replace with Net at Once logo -->
+        <img src="netatonce-logo.png" alt="Net at Once" class="logo" />
+        <!-- If logo is not available, uncomment the placeholder below: -->
+        <!-- <svg class="logo" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="60" fill="#ff9900" rx="4"/>
+            <text x="100" y="40" font-size="24" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial, sans-serif">Net at Once</text>
+        </svg> -->
+        <h1>Framtidens arbetsplats</h1>
+        <p class="tagline">Invigning & Minimässa</p>
+    </header>
+
+    <div class="container">
+        <div class="intro-box">
+            <p><strong>Den 23 september samlar vi några av de starkaste krafterna inom teknik, kommunikation, digitala arbetsplatser, fastigheter och verksamhetsutveckling under samma tak.</strong></p>
+            <p><strong>Resultatet?</strong> En eftermiddag fylld av inspiration, innovation och möten med människor som driver utvecklingen framåt.</p>
+            <p>Vi inviger våra nya lokaler, men det här handlar om mycket mer än en invigning. Det handlar om hur moderna företag skapar bättre arbetsplatser, smartare möten, säkrare verksamheter och starkare upplevelser för både medarbetare och kunder.</p>
+            <p>Förvänta dig snabba och inspirerande föreläsningar, ett engagerande panelsamtal om det moderna uppkopplade företaget och en mini-mässa där du kan uppleva lösningar, ställa frågor och knyta nya kontakter.</p>
+            <p style="color: #ffb84d; font-weight: 500; font-size: 1.05rem; margin-top: 1.5rem;"><strong>Kom för inspirationen. Stanna för samtalen. Gå hem med nya idéer.</strong></p>
+            <p style="color: #ffb84d; font-weight: 500; margin-top: 1rem;">✨ Plus: alla deltagare är med i utlottningen om en <strong onclick="openModal('neatPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Neat Frame</strong> och ett <strong onclick="openModal('jabraPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Jabra Evolve3 85</strong> — två verktyg som verkligen höjer arbetskvaliteten!</p>
+        </div>
+
+        <div class="sections-grid">
+            <div class="section-card" onclick="openModal('agendaModal')" style="cursor: pointer;">
+                <div class="section-header">
+                    <span>📅 Program & Agenda</span>
+                </div>
+            </div>
+
+            <div class="section-card" onclick="openPanelModal()" style="cursor: pointer;">
+                <div class="section-header">
+                    <span>🎤 Panelsamtal</span>
+                </div>
+            </div>
+
+            <div class="section-card" onclick="openModal('praktiskModal')" style="cursor: pointer;">
+                <div class="section-header">
+                    <span>❓ Praktisk info</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="exhibitors-section">
+            <h2>🏢 Minimässans utställare</h2>
+            <div class="exhibitors-grid">
+                <a href="https://www.microsoft.com" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/microsoft.png" alt="Microsoft" class="exhibitor-logo">
+                    <h4>Microsoft</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Molnlösningar och produktivitetsverktyg för moderna organisationer</p>
+                </a>
+                <a href="https://neat.no" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/neat.jpeg" alt="Neat" class="exhibitor-logo">
+                    <h4>Neat</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">State-of-the-art videokonferensenheter för mötesutrymmen och hybridarbete</p>
+                </a>
+                <a href="https://isicom.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/isicom.jpeg" alt="ISICOM" class="exhibitor-logo">
+                    <h4>ISICOM</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Distributör av hårdvara som möjliggör arbete och samarbete i hybrid värld</p>
+                </a>
+                <a href="https://www.netatonce.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="netatonce-logo.png" alt="Net at Once" class="exhibitor-logo">
+                    <h4>Net at Once</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Bredbandsoperatör med tjänster för företag och privatpersoner</p>
+                </a>
+                <a href="https://intimeit.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/intimeit.png" alt="InTime IT" class="exhibitor-logo">
+                    <h4>InTime IT</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">IT-tjänster, drift, IP-telefoni, webblösningar och kassasystem</p>
+                </a>
+                <a href="https://www.fagnes.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/fagnes.png" alt="Fagnes" class="exhibitor-logo">
+                    <h4>Fagnes</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Fastighetsbolag inom bostads- och näringsfastigheter</p>
+                </a>
+                <a href="https://eldot.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/eldot.png" alt="Eldot" class="exhibitor-logo">
+                    <h4>Eldot</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Elinstallation, solceller, batterier, laddstolpar och fibernätsutbyggnad</p>
+                </a>
+            </div>
+        </div>
+
+        <div class="registration-section">
+            <h2>🎟️ Registrera dig nu!</h2>
+            <p>Anmäl dig för att säkra din plats på invigningen och minimässan.</p>
+            <p style="font-size: 0.95rem; color: #999;">Registrering krävs. Det är helt kostnadsfritt att delta!</p>
+            <a href="https://forms.cloud.microsoft/e/SxZ6MD6iFN" target="_blank" class="registration-button">Anmäl dig här</a>
+        </div>
+
+        <div style="background: rgba(30, 50, 80, 0.8); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: 2px solid #ff9900;">
+            <h2 style="color: #ff9900; margin-bottom: 1.5rem; text-align: center;">Framtidens arbetsplats börjar här!</h2>
+            <p style="text-align: center; color: #c0c0c0;">Framtidens arbetsplats är inte bara en vision - det är en verklighet som skapas idag. Vi är glada att kunna arrangera denna invigning tillsammans med våra utställare och panelister.</p>
+            <p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 1rem;">Har du frågor? Kontakta oss för mer information.</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Tävling. Alla rättigheter förbehållna.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Neat Frame och Jabra Evolve3 85 är registrerade märken.</p>
+    </footer>
+
+    <!-- Neat Frame Prize Modal -->
+    <div id="neatPrizeModal" class="modal" onclick="closeModalOnBackground(event, 'neatPrizeModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('neatPrizeModal')">&times;</button>
+            <h2 class="modal-title">✨ Neat Frame</h2>
+            <p style="color: #00d4ff; font-size: 1.1rem; font-weight: bold; text-align: center;">Det är skillnaden mellan ett bra möte och ett *perfekt* möte.</p>
+            <div style="margin-top: 2rem; text-align: center;">
+                <p style="color: #c0c0c0; line-height: 1.8; font-size: 1rem;">
+                    Föreställ dig detta: Du sitter hemma. Dina kollegor är på kontoret. Ändå känns det som att ni sitter runt samma bord.
+                </p>
+                <p style="color: #c0c0c0; line-height: 1.8; font-size: 1rem; margin-top: 1.5rem;">
+                    <strong style="color: #ff9900;">Neat Frame</strong> är en videokonferensenhet som transformerar hur du möts. Genom sitt revolutionära 4K-bildformat och AI-driven framing kan alla deltagare — oavsett om de är hemma eller på kontoret — känna samma närvaro och engagement.
+                </p>
+            </div>
+            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 153, 0, 0.15); border-left: 4px solid #ff9900; border-radius: 8px;">
+                <p style="color: #ff9900; font-weight: bold; margin-bottom: 1rem;">Varför Neat Frame slår allt annat:</p>
+                <ul style="color: #c0c0c0; text-align: left; margin-left: 1rem;">
+                    <li>✨ <strong>Cinematisk bildkvalitet</strong> — 4K-upplösning som gör dig osynlig men helt närvarande</li>
+                    <li>🎬 <strong>AI-driven framing</strong> — ramningen följer dig automatiskt, så du är alltid i fokus</li>
+                    <li>🤝 <strong>Hybrid-möten på nästa nivå</strong> — bridgar gapet mellan kontor och hemmakontor helt</li>
+                    <li>🔊 <strong>Studio-grade ljud</strong> — varje ord hörs kristallklar, ingen mer "Hej, du är på mute?"</li>
+                </ul>
+            </div>
+            <p style="color: #00d4ff; text-align: center; margin-top: 2rem; font-size: 0.95rem;">
+                <a href="https://neat.no/frame/?overview" target="_blank" style="color: #00d4ff; text-decoration: underline;">Läs mer om Neat Frame →</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Jabra Evolve3 85 Prize Modal -->
+    <div id="jabraPrizeModal" class="modal" onclick="closeModalOnBackground(event, 'jabraPrizeModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('jabraPrizeModal')">&times;</button>
+            <h2 class="modal-title">🎧 Jabra Evolve3 85</h2>
+            <p style="color: #00d4ff; font-size: 1.1rem; font-weight: bold; text-align: center;">För dem som *inte* vill höra bakgrundsljud. Eller sin chef.</p>
+            <div style="margin-top: 2rem; text-align: center;">
+                <p style="color: #c0c0c0; line-height: 1.8; font-size: 1rem;">
+                    Om möten är där arbetet händer, så är ljud där fokus försvinner.
+                </p>
+                <p style="color: #c0c0c0; line-height: 1.8; font-size: 1rem; margin-top: 1.5rem;">
+                    <strong style="color: #ff9900;">Jabra Evolve3 85</strong> är inte bara ett headset — det är din personliga mötesstudio. Med världsledande brusreducering, premium ljud och smidiga kontroller är det designat för professionella som *inte* accepterar "sådär" när det gäller ljudkvalitet.
+                </p>
+            </div>
+            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 153, 0, 0.15); border-left: 4px solid #ff9900; border-radius: 8px;">
+                <p style="color: #ff9900; font-weight: bold; margin-bottom: 1rem;">Varför Evolve3 85 är game-changern:</p>
+                <ul style="color: #c0c0c0; text-align: left; margin-left: 1rem;">
+                    <li>🔇 <strong>Världsklass brusreducering</strong> — din chef hör bara dig, inte ditt kaffebryggeri</li>
+                    <li>🎯 <strong>Kristallklar VoIP-teknik</strong> — varje samtal blir en direkt linje, inte en telefonledning från 1995</li>
+                    <li>🎤 <strong>Dubbel mikrofonteknik</strong> — din röst kommer fram, deras skranande bakgrund gör det inte</li>
+                    <li>👂 <strong>All-day comfort</strong> — 25 timmar batteritid utan att sluta spela den där låten från 80-talet</li>
+                    <li>📱 <strong>Seamless switching</strong> — från Teams till Zoom till telefonsamtal utan att behöva hålla om något</li>
+                </ul>
+            </div>
+            <p style="color: #00d4ff; text-align: center; margin-top: 2rem; font-size: 0.95rem;">
+                <a href="https://www.jabra.com/business/office-headsets/jabra-evolve/jabra-evolve3-85" target="_blank" style="color: #00d4ff; text-decoration: underline;">Läs mer om Jabra Evolve3 85 →</a>
+            </p>
+        </div>
+    </div>
+
+    
+    <div id="agendaModal" class="modal" onclick="closeModalOnBackground(event, 'agendaModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('agendaModal')">&times;</button>
+            <h2 class="modal-title">📅 Program & Agenda</h2>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <ul style="line-height: 2; color: #c0c0c0;">
+                    <li><strong style="color: #ff9900;">12:50-13:00</strong> Registrering och kaffe</li>
+                    <li><strong style="color: #ff9900;">13:00-13:10</strong> Invigning av Net at Once tillsammans med Fagnes</li>
+                    <li><strong style="color: #ff9900;">13:10-13:20</strong> Kim, Viktor och Henke – Net at Once affärsområden</li>
+                    <li><strong style="color: #ff9900;">13:20-13:25</strong> InTime IT</li>
+                    <li><strong style="color: #ff9900;">13:25-13:30</strong> Eldot</li>
+                    <li><strong style="color: #ff9900;">13:30-13:35</strong> Fagnes</li>
+                    <li><strong style="color: #ff9900;">13:35-14:00</strong> ISICOM och NEAT</li>
+                    <li><strong style="color: #ff9900;">14:00-14:15</strong> Paus</li>
+                    <li><strong style="color: #00d4ff;">14:15-15:00</strong> <strong>Paneldebatt</strong> - Framtidens arbetsplats</li>
+                    <li><strong style="color: #ff9900;">15:00-17:00</strong> Mässa och mingel</li>
+                    <li><strong style="color: #ff9900;">17:00-</strong> Afterwork - enklare dryck och fortsatt dialog</li>
+                </ul>
+                <p style="margin-top: 2rem; font-style: italic; color: #888;">Schema kan komma att ändras. Se uppdateringar för mer information.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Praktisk Info Modal -->
+    <div id="praktiskModal" class="modal" onclick="closeModalOnBackground(event, 'praktiskModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('praktiskModal')">&times;</button>
+            <h2 class="modal-title">❓ Praktisk info</h2>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <h4 style="color: #00d4ff; margin-top: 0;">Vad behöver jag veta?</h4>
+                <ul style="color: #c0c0c0; line-height: 1.8;">
+                    <li><strong>Du MÅSTE registrera dig</strong> för att delta</li>
+                    <li>Entré är helt kostnadsfritt för registrerade</li>
+                    <li>Kaffe serveras under dagen</li>
+                    <li>Efter 17:00 öppnas enklare afterwork för fortsatt dialog och umgås</li>
+                    <li>Anmäl dig via länken nedan</li>
+                </ul>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px;">
+                    <p style="color: #00d4ff; font-weight: bold; margin: 0.5rem 0;">📍 Adress:</p>
+                    <p style="color: #c0c0c0; margin: 0 0 1rem 0;">Trädgårdgatan 26</p>
+                    <p style="color: #00d4ff; font-weight: bold; margin: 0.5rem 0;">📅 Datum:</p>
+                    <p style="color: #c0c0c0; margin: 0 0 1rem 0;">23 september 2026</p>
+                    <p style="color: #00d4ff; font-weight: bold; margin: 0.5rem 0;">🕐 Tid:</p>
+                    <p style="color: #c0c0c0; margin: 0;">13:00 - 17:00</p>
+                </div>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 153, 0, 0.1); border-left: 4px solid #ff9900; border-radius: 8px;">
+                    <p style="color: #ff9900; font-weight: bold; margin: 0.5rem 0;">📧 E-post:</p>
+                    <p style="margin: 0 0 1rem 0;"><a href="mailto:stefan.johansson@netatonce.se" style="color: #00d4ff; text-decoration: none;">stefan.johansson@netatonce.se</a></p>
+                    <p style="color: #ff9900; font-weight: bold; margin: 0.5rem 0;">📞 Telefon:</p>
+                    <p style="margin: 0;"><a href="tel:047047200" style="color: #00d4ff; text-decoration: none;">0470-47200</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="panelOverviewModal" class="modal" onclick="closeModalOnBackground(event, 'panelOverviewModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('panelOverviewModal')">&times;</button>
+            <h2 class="modal-title">🎤 Paneldeltagare</h2>
+            <p><strong>Framtidens arbetsplats - från teori till verklighet</strong></p>
+            <p style="color: #999; margin-bottom: 1.5rem;">Klicka på ett företag för att läsa mer:</p>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 0.8rem;">
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('fagnes')">
+                    <strong style="color: #ff9900;">Fagnes</strong> <span style="color: #999;">- Fastighet & arbetsmiljö</span>
+                </div>
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('eldot')">
+                    <strong style="color: #ff9900;">Eldot</strong> <span style="color: #999;">- EL, energi & installation</span>
+                </div>
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('netatonce')">
+                    <strong style="color: #ff9900;">Net at Once</strong> <span style="color: #999;">- Nätverk & kommunikation</span>
+                </div>
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('intimeit')">
+                    <strong style="color: #ff9900;">InTime IT</strong> <span style="color: #999;">- IT-drift & användarstöd</span>
+                </div>
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('isicom')">
+                    <strong style="color: #ff9900;">ISICOM</strong> <span style="color: #999;">- Personlig arbetsplats & utrustning</span>
+                </div>
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('neat')">
+                    <strong style="color: #ff9900;">NEAT</strong> <span style="color: #999;">- Mötesutrustning & hybridupplevelse</span>
+                </div>
+                <div style="padding: 1rem; background: rgba(0, 212, 255, 0.1); border-left: 4px solid #00d4ff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 212, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 212, 255, 0.1)'" onclick="openModal('microsoft')">
+                    <strong style="color: #ff9900;">Microsoft</strong> <span style="color: #999;">- AI & digitalt arbete</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for Panel Companies -->
+    <div id="fagnesModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'fagnesModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('fagnesModal')">&times;</button>
+            <h2 class="modal-title">Fagnes</h2>
+            <p><strong>Fokusområde:</strong> Fastighet & arbetsmiljö</p>
+            <p>Fagnes är ett fastighetsbolag som specialiserar sig på bostads- och näringsfastigheter. De fokuserar på att skapa högkvalitativa arbetsmiljöer och bostadsmiljöer.</p>
+            <p><a href="https://www.fagnes.se" target="_blank">Besök Fagnes →</a></p>
+        </div>
+    </div>
+
+    <div id="eldotModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'eldotModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('eldotModal')">&times;</button>
+            <h2 class="modal-title">Eldot</h2>
+            <p><strong>Fokusområde:</strong> EL, energi & installation</p>
+            <p>Eldot erbjuder elinstallation, solceller, batterier, laddstolpar och fibernätsutbyggnad. De är en väl etablerad aktör inom energi- och installationsbranschen.</p>
+            <p><a href="https://eldot.se" target="_blank">Besök Eldot →</a></p>
+        </div>
+    </div>
+
+    <div id="netatonceModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'netatonceModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('netatonceModal')">&times;</button>
+            <h2 class="modal-title">Net at Once</h2>
+            <p><strong>Fokusområde:</strong> Nätverk & kommunikation</p>
+            <p>Net at Once är en bredbandsoperatör som erbjuder fiberbredband och telekommunikationslösningar. De fokuserar på att tillhandahålla snabba och pålitliga nätverkslösningar för både privat och företag.</p>
+            <p><a href="https://www.netatonce.se" target="_blank">Besök Net at Once →</a></p>
+        </div>
+    </div>
+
+    <div id="intimeItModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'intimeItModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('intimeItModal')">&times;</button>
+            <h2 class="modal-title">InTime IT</h2>
+            <p><strong>Fokusområde:</strong> IT-drift & användarstöd</p>
+            <p>InTime IT specialiserar sig på IT-drift och teknisk support för företag. De tillhandahåller helhetslösningar för IT-infrastruktur och användarstöd.</p>
+            <p><a href="https://intimeit.se" target="_blank">Besök InTime IT →</a></p>
+        </div>
+    </div>
+
+    <div id="isicomModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'isicomModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('isicomModal')">&times;</button>
+            <h2 class="modal-title">ISICOM</h2>
+            <p><strong>Fokusområde:</strong> Personlig arbetsplats & utrustning</p>
+            <p>ISICOM erbjuder lösningar för att skapa optimala arbetsplatsmiljöer. De fokuserar på möbler, ergonomi och utrustning som förbättrar arbetsmiljön och produktiviteten.</p>
+            <p><a href="https://isicom.se" target="_blank">Besök ISICOM →</a></p>
+        </div>
+    </div>
+
+    <div id="neatModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'neatModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('neatModal')">&times;</button>
+            <h2 class="modal-title">NEAT</h2>
+            <p><strong>Fokusområde:</strong> Mötesutrustning & hybridupplevelse</p>
+            <p>NEAT är en innovatör inom mötesutrustning och hybridarbete. De erbjuder produkter som Neat Frame som gör det möjligt att ha engagerande möten oavsett var deltagarna befinner sig.</p>
+            <p><a href="https://neat.no" target="_blank">Besök NEAT →</a></p>
+        </div>
+    </div>
+
+    <div id="microsoftModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'microsoftModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('microsoftModal')">&times;</button>
+            <h2 class="modal-title">Microsoft</h2>
+            <p><strong>Fokusområde:</strong> AI & digitalt arbete</p>
+            <p>Microsoft är en ledande global teknologikoncern som tillhandahåller lösningar för digitalt arbete och AI. De erbjuder produkter och tjänster som transformerar hur organisationer arbetar och samarbetar.</p>
+            <p><a href="https://www.microsoft.com" target="_blank">Besök Microsoft →</a></p>
+        </div>
+    </div>
+
+    <script>
+        function scrollToForm() {
+            alert('Anmälningsformulär kommer snart. Tack för ditt intresse!');
+        }
+
+        // Modal functions
+        function openModal(id) {
+            const modalMap = {
+                'fagnes': 'fagnesModal',
+                'eldot': 'eldotModal',
+                'netatonce': 'netatonceModal',
+                'intimeit': 'intimeItModal',
+                'isicom': 'isicomModal',
+                'neat': 'neatModal',
+                'microsoft': 'microsoftModal'
+            };
+            
+            // Check if id is a key in modalMap (company ID)
+            const modalId = modalMap[id] || id;
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function openPanelModal() {
+            const modal = document.getElementById('panelOverviewModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeModalOnBackground(event, modalId) {
+            if (event.target.id === modalId) {
+                closeModal(modalId);
+            }
+        }
+
+        // Add fade-in animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.section-card, .product-card, .intro-box, .registration-section');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in');
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>
