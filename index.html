@@ -303,6 +303,77 @@
             border-top: 2px solid #ff9900;
         }
 
+        .sponsor-thanks {
+            background: rgba(30, 50, 80, 0.8);
+            border: 2px solid #00d4ff;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .sponsor-thanks h2 {
+            color: #ff9900;
+            margin-bottom: 0.75rem;
+            font-size: 1.7rem;
+        }
+
+        .sponsor-thanks > p {
+            color: #c0c0c0;
+            max-width: 720px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .sponsor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .sponsor-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 230px;
+            padding: 1.5rem;
+            background: rgba(15, 31, 53, 0.85);
+            border: 1px solid rgba(0, 212, 255, 0.45);
+            border-radius: 10px;
+        }
+
+        .sponsor-logo {
+            width: min(180px, 85%);
+            height: 76px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
+
+        .sponsor-card p {
+            color: #c0c0c0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .sponsor-link {
+            color: #00d4ff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .sponsor-link:hover {
+            color: #ff9900;
+            text-decoration: underline;
+        }
+
         .exhibitors-section {
             background: rgba(30, 50, 80, 0.6);
             border-radius: 12px;
@@ -390,6 +461,10 @@
             }
 
             .sections-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sponsor-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -630,6 +705,23 @@
             <p style="text-align: center; color: #c0c0c0;">Framtidens arbetsplats är inte bara en vision - det är en verklighet som skapas idag. Vi är glada att kunna arrangera denna invigning tillsammans med våra utställare och panelister.</p>
             <p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 1rem;">Har du frågor? Kontakta oss för mer information.</p>
         </div>
+
+        <section class="sponsor-thanks" aria-labelledby="sponsorThanksTitle">
+            <h2 id="sponsorThanksTitle">Ett extra varmt tack!</h2>
+            <p>Vi vill rikta ett extra tack till Jabra och Neat, som har bidragit med de fina produkterna till dagens tävling. Lycka till i utlottningen!</p>
+            <div class="sponsor-grid">
+                <div class="sponsor-card">
+                    <img src="assets/jabra.png" alt="Jabra" class="sponsor-logo">
+                    <p>Tack Jabra för det fantastiska headsetet Jabra Evolve3 85 – utvecklat för fokuserade samtal, tydligt ljud och en arbetsdag med hög kvalitet.</p>
+                    <a href="https://www.jabra.com/sv-se" target="_blank" rel="noopener noreferrer" class="sponsor-link">Besök Jabras svenska hemsida →</a>
+                </div>
+                <div class="sponsor-card">
+                    <img src="assets/neat.png" alt="Neat" class="sponsor-logo">
+                    <p>Tack Neat för Neat Frame – en elegant möteslösning som gör digitala möten mer närvarande, personliga och engagerande.</p>
+                    <a href="https://neat.no/" target="_blank" rel="noopener noreferrer" class="sponsor-link">Besök Neats hemsida →</a>
+                </div>
+            </div>
+        </section>
     </div>
 
     <footer>
