@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invigning & Teknik- och inspirationsdag - Framtidens arbetsplats</title>
+    <title>Invigning, teknik- och inspirationsdag - Framtidens arbetsplats</title>
     <style>
         * {
             margin: 0;
@@ -320,8 +320,24 @@
 
         .exhibitors-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(12, minmax(0, 1fr));
             gap: 1.5rem;
+        }
+
+        .exhibitors-grid .exhibitor-card {
+            grid-column: span 3;
+        }
+
+        .exhibitors-grid .exhibitor-card:nth-child(1) {
+            grid-column: 2 / span 3;
+        }
+
+        .exhibitors-grid .exhibitor-card:nth-child(2) {
+            grid-column: 5 / span 3;
+        }
+
+        .exhibitors-grid .exhibitor-card:nth-child(3) {
+            grid-column: 8 / span 3;
         }
 
         .exhibitor-card {
@@ -364,6 +380,17 @@
 
             .sections-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .exhibitors-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .exhibitors-grid .exhibitor-card,
+            .exhibitors-grid .exhibitor-card:nth-child(1),
+            .exhibitors-grid .exhibitor-card:nth-child(2),
+            .exhibitors-grid .exhibitor-card:nth-child(3) {
+                grid-column: auto;
             }
 
             header {
@@ -506,7 +533,7 @@
             <text x="100" y="40" font-size="24" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial, sans-serif">Net at Once</text>
         </svg> -->
         <h1>Framtidens arbetsplats</h1>
-        <p class="tagline">Invigning & Teknik- och inspirationsdag</p>
+        <p class="tagline">Invigning, teknik- och inspirationsdag</p>
     </header>
 
     <div class="container">
@@ -542,6 +569,21 @@
         <div class="exhibitors-section">
             <h2>🏢 Utställare</h2>
             <div class="exhibitors-grid">
+                <a href="https://www.netatonce.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="netatonce-logo.png" alt="Net at Once" class="exhibitor-logo">
+                    <h4>Net at Once</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Bredbandsoperatör med tjänster för företag och privatpersoner</p>
+                </a>
+                <a href="https://intimeit.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/intimeit.png" alt="InTime IT" class="exhibitor-logo">
+                    <h4>InTime IT</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">IT-tjänster, drift, IP-telefoni, webblösningar och kassasystem</p>
+                </a>
+                <a href="https://eldot.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
+                    <img src="assets/logos/eldot.png" alt="Eldot" class="exhibitor-logo">
+                    <h4>Eldot</h4>
+                    <p style="color: #c0c0c0; font-size: 0.85rem;">Elinstallation, solceller, batterier, laddstolpar och fibernätsutbyggnad</p>
+                </a>
                 <a href="https://www.microsoft.com" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
                     <img src="assets/logos/microsoft.png" alt="Microsoft" class="exhibitor-logo">
                     <h4>Microsoft</h4>
@@ -557,25 +599,10 @@
                     <h4>ISICOM</h4>
                     <p style="color: #c0c0c0; font-size: 0.85rem;">Distributör av hårdvara som möjliggör arbete och samarbete i hybrid värld</p>
                 </a>
-                <a href="https://www.netatonce.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
-                    <img src="netatonce-logo.png" alt="Net at Once" class="exhibitor-logo">
-                    <h4>Net at Once</h4>
-                    <p style="color: #c0c0c0; font-size: 0.85rem;">Bredbandsoperatör med tjänster för företag och privatpersoner</p>
-                </a>
-                <a href="https://intimeit.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
-                    <img src="assets/logos/intimeit.png" alt="InTime IT" class="exhibitor-logo">
-                    <h4>InTime IT</h4>
-                    <p style="color: #c0c0c0; font-size: 0.85rem;">IT-tjänster, drift, IP-telefoni, webblösningar och kassasystem</p>
-                </a>
                 <a href="https://www.fagnes.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
                     <img src="assets/logos/fagnes.png" alt="Fagnes" class="exhibitor-logo">
                     <h4>Fagnes</h4>
                     <p style="color: #c0c0c0; font-size: 0.85rem;">Fastighetsbolag inom bostads- och näringsfastigheter</p>
-                </a>
-                <a href="https://eldot.se" target="_blank" class="exhibitor-card fade-in" style="text-decoration: none; color: inherit;">
-                    <img src="assets/logos/eldot.png" alt="Eldot" class="exhibitor-logo">
-                    <h4>Eldot</h4>
-                    <p style="color: #c0c0c0; font-size: 0.85rem;">Elinstallation, solceller, batterier, laddstolpar och fibernätsutbyggnad</p>
                 </a>
             </div>
         </div>
