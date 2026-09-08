@@ -49,6 +49,39 @@
             font-weight: 300;
         }
 
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown-unit {
+            min-width: 78px;
+            padding: 0.7rem 0.6rem;
+            background: rgba(15, 31, 53, 0.72);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .countdown-value {
+            display: block;
+            color: #ffb84d;
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .countdown-label {
+            display: block;
+            margin-top: 0.25rem;
+            color: #c0c0c0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -483,6 +516,19 @@
                 padding: 2rem 1rem;
             }
 
+            .countdown {
+                gap: 0.35rem;
+            }
+
+            .countdown-unit {
+                min-width: 65px;
+                padding: 0.55rem 0.35rem;
+            }
+
+            .countdown-value {
+                font-size: 1.35rem;
+            }
+
             .container {
                 padding: 1.5rem 1rem;
             }
@@ -620,6 +666,12 @@
         </svg> -->
         <h1>Framtidens arbetsplats</h1>
         <p class="tagline">Invigning, teknik- och inspirationsdag</p>
+        <div class="countdown" aria-label="Nedräkning till eventet">
+            <div class="countdown-unit"><span class="countdown-value" id="countdownDays">0</span><span class="countdown-label">dagar</span></div>
+            <div class="countdown-unit"><span class="countdown-value" id="countdownHours">0</span><span class="countdown-label">timmar</span></div>
+            <div class="countdown-unit"><span class="countdown-value" id="countdownMinutes">0</span><span class="countdown-label">minuter</span></div>
+            <div class="countdown-unit"><span class="countdown-value" id="countdownSeconds">0</span><span class="countdown-label">sekunder</span></div>
+        </div>
     </header>
 
     <div class="container">
@@ -1001,6 +1053,31 @@
                     card.classList.add('fade-in');
                 }, index * 50);
             });
+
+            const eventTime = new Date('2026-09-23T13:00:00+02:00').getTime();
+            const countdown = {
+                days: document.getElementById('countdownDays'),
+                hours: document.getElementById('countdownHours'),
+                minutes: document.getElementById('countdownMinutes'),
+                seconds: document.getElementById('countdownSeconds')
+            };
+
+            function updateCountdown() {
+                const remaining = Math.max(0, eventTime - Date.now());
+                const totalSeconds = Math.floor(remaining / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                countdown.days.textContent = days;
+                countdown.hours.textContent = String(hours).padStart(2, '0');
+                countdown.minutes.textContent = String(minutes).padStart(2, '0');
+                countdown.seconds.textContent = String(seconds).padStart(2, '0');
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
         });
     </script>
 </body>
