@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Net at Once - Utlottning</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 12% 8%, rgba(25, 183, 185, 0.24), transparent 34rem), radial-gradient(circle at 92% 18%, rgba(18, 71, 158, 0.2), transparent 30rem), var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body.presentation { background: #05080f; overflow: hidden; }
+    button, input, textarea, select { font: inherit; color: inherit; }
+    button {
+      border: 0;
+      border-radius: 0.625rem;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, #19b7b9, #12479e);
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    button.secondary { background: var(--cp-surface-soft); color: var(--cp-text); border: 1px solid var(--cp-border); }
+    button.danger { background: var(--cp-danger); color: #ffffff; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    a { color: var(--cp-link); }
+    .app { width: min(1180px, calc(100% - clamp(16px, 4vw, 32px))); margin: 0 auto; padding: clamp(12px, 2.5vw, 24px) 0 clamp(20px, 4vw, 40px); }
+    body.presentation .app { width: 100%; height: 100dvh; padding: 0; }
+    header { display: flex; gap: 16px; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .brand { display: flex; gap: 14px; align-items: center; min-width: 0; }
+    .mark { width: 64px; height: 64px; border-radius: 16px; background: #05080f; display: grid; place-items: center; overflow: hidden; padding: 8px; border: 1px solid rgba(25, 183, 185, 0.45); flex: 0 0 auto; }
+    .logo { width: 100%; height: 100%; object-fit: contain; }
+    h1, h2, h3 { margin: 0; letter-spacing: -0.03em; }
+    h1 { font-size: clamp(1.7rem, 4vw, 3rem); }
+    h2 { font-size: clamp(1.35rem, 2.4vw, 2rem); }
+    p { color: var(--cp-text-muted); line-height: 1.55; overflow-wrap: anywhere; }
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav a { text-decoration: none; border: 1px solid var(--cp-border); background: var(--cp-panel); color: var(--cp-text); border-radius: 0.625rem; padding: 0.65rem 0.9rem; font-weight: 800; }
+    .nav a.active { border-color: #19b7b9; background: rgba(25, 183, 185, 0.14); color: #12479e; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .grid > * { min-width: 0; }
+    .card { border: 1px solid var(--cp-border); border-radius: 16px; background: var(--cp-panel-strong); box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border); padding: 20px; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    label { display: block; margin: 0 0 6px; color: var(--cp-text-muted); font-weight: 800; }
+    input, textarea, select { width: 100%; border: 1px solid var(--cp-border); background: var(--cp-surface); border-radius: 0.625rem; padding: 0.8rem 0.9rem; outline: none; }
+    textarea { min-height: 110px; resize: vertical; }
+    .field { margin-bottom: 14px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .muted { color: var(--cp-text-muted); }
+    .small { font-size: 0.9rem; }
+    .pill { display: inline-flex; align-items: center; border: 1px solid var(--cp-border); border-radius: 999px; padding: 0.32rem 0.65rem; background: var(--cp-surface-soft); color: var(--cp-text-muted); font-size: 0.86rem; font-weight: 800; overflow-wrap: anywhere; }
+    .stat { border: 1px solid var(--cp-border); border-radius: 16px; padding: 16px; background: var(--cp-surface); }
+    .stat strong { display: block; font-size: 2rem; letter-spacing: -0.06em; }
+    .table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-surface); }
+    table { width: 100%; min-width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--cp-border); padding: 10px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+    th { color: var(--cp-text-muted); font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .qrbox { display: grid; place-items: center; min-height: 280px; border: 1px dashed var(--cp-border-strong); border-radius: 16px; background: var(--cp-surface); padding: 16px; }
+    canvas { max-width: 100%; height: auto; image-rendering: pixelated; }
+    .draw-stage { height: 100dvh; display: grid; place-items: center; text-align: center; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 16%, rgba(25, 183, 185, 0.22), transparent 24rem), linear-gradient(145deg, rgba(5, 8, 15, 0.96), rgba(18, 71, 158, 0.88)); color: #ffffff; cursor: pointer; }
+    .draw-stage::before { content: ""; position: absolute; inset: -20%; background: repeating-linear-gradient(90deg, transparent 0 44px, rgba(255, 255, 255, 0.06) 44px 45px), radial-gradient(circle at 20% 20%, rgba(25, 183, 185, 0.24), transparent 28rem); pointer-events: none; animation: stageSweep 10s linear infinite; }
+    @keyframes stageSweep { from { transform: translateX(0); } to { transform: translateX(72px); } }
+    .draw-content { width: min(980px, 100%); height: 100dvh; position: relative; z-index: 1; padding: clamp(14px, 3vw, 32px); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+    .draw-logo { width: min(210px, 42vw, 28vh); height: auto; object-fit: contain; margin-bottom: 12px; filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.38)); }
+    .draw-content.final-mode { justify-content: flex-start; gap: clamp(8px, 1.5vh, 16px); padding: clamp(10px, 2vh, 24px) clamp(16px, 3vw, 40px); }
+    .draw-content.final-mode .draw-logo { width: min(150px, 18vw, 18vh); margin-bottom: 0; }
+    .slot { margin: clamp(12px, 3vh, 22px) auto; width: min(920px, 100%); min-height: clamp(112px, 20vh, 170px); display: grid; place-items: center; border: 1px solid rgba(25, 183, 185, 0.58); border-radius: 16px; background: rgba(5, 8, 15, 0.78); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42); overflow: hidden; }
+    .slot-name { font-size: clamp(1.4rem, min(6.2vw, 12vh), 4.8rem); line-height: 1; font-weight: 900; color: #ffffff; letter-spacing: 0.04em; padding: 22px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: Consolas, "Courier New", Courier, monospace; text-shadow: 0 0 20px rgba(25, 183, 185, 0.78); }
+    .slot.spinning .slot-name { animation: jitter 92ms infinite; }
+    .winner { animation: pop 900ms ease both; color: #19b7b9; letter-spacing: -0.04em; font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+    .final-title { flex: 0 0 auto; font-size: clamp(1.8rem, min(5vw, 9vh), 4.8rem); line-height: 1; font-weight: 900; color: #ffffff; text-shadow: 0 0 28px rgba(25, 183, 185, 0.58); }
+    .final-board { width: min(1100px, 100%); height: var(--final-board-height, auto); flex: 0 0 var(--final-board-height, auto); display: grid; grid-auto-rows: minmax(0, 1fr); gap: clamp(10px, 2vh, 18px); overflow: visible; padding: 2px; }
+    .final-card { border: 1px solid rgba(25, 183, 185, 0.58); border-radius: 18px; background: rgba(5, 8, 15, 0.78); box-shadow: 0 12px 34px rgba(0, 0, 0, 0.36); padding: clamp(14px, min(3vw, 3vh), 34px); min-height: 0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; animation: finalIn 520ms ease both; }
+    .final-prize { display: block; font-size: var(--final-prize-size, 24px); font-weight: 800; color: #19b7b9; margin-bottom: 8px; }
+    .final-winner { display: block; font-size: var(--final-winner-size, 46px); line-height: 1; font-weight: 950; letter-spacing: -0.06em; color: #ffffff; overflow-wrap: anywhere; }
+    .final-organization { display: block; margin-top: 10px; font-size: var(--final-org-size, 18px); color: rgba(255, 255, 255, 0.74); }
+    @keyframes jitter { 0% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 100% { transform: translateX(-1px); } }
+    @keyframes pop { 0% { transform: scale(0.92); opacity: 0.3; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes finalIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 30; background: var(--cp-panel-strong); color: var(--cp-text); border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 12px 14px; box-shadow: var(--cp-shadow); max-width: 360px; display: none; }
+    .toast.show { display: block; }
+    @media (max-width: 1100px) { .registrations-table th:nth-child(4), .registrations-table td:nth-child(4), .registrations-table th:nth-child(5), .registrations-table td:nth-child(5) { display: none; } }
+    @media (max-width: 820px) { header { align-items: flex-start; flex-direction: column; } .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; } .card { padding: 16px; } .nav { width: 100%; } .nav a { flex: 1 1 auto; text-align: center; } .qrbox { min-height: 220px; } th, td { padding: 8px 6px; } }
+    @media (max-width: 560px) { h1 { font-size: clamp(1.45rem, 8vw, 2.1rem); } .mark { width: 52px; height: 52px; } .row > button, .row > label.secondary { flex: 1 1 100%; justify-content: center; } .registrations-table th:nth-child(3), .registrations-table td:nth-child(3) { display: none; } table { font-size: 0.88rem; } .slot-name { white-space: normal; line-height: 1.08; } }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+  <div class="toast" id="toast"></div>
+  <script src="/qrcode.js"></script>
+  <script>
+    const app = document.getElementById("app");
+    let state = { registrations: [], prizes: [], publicUrl: "" };
+    let spinTimer = 0;
+    let pendingWinner = null;
+
+    const route = () => location.pathname.replace(/\/$/, "");
+    const isAdminRoute = () => route() === "/raffle/admin";
+    const isDrawRoute = () => route() === "/raffle/draw";
+    const registerUrl = () => `${state.publicUrl || location.origin + "/raffle"}`;
+    const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+    const fullName = reg => `${reg.firstName} ${reg.lastName}`.trim();
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Något gick fel.");
+      return data;
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 3200);
+    }
+
+    function shell(content, active = "") {
+      document.body.classList.toggle("presentation", false);
+      app.className = "app";
+      app.innerHTML = `
+        <header>
+          <div class="brand">
+            <div class="mark"><img class="logo" src="/net-at-once-logo.png" alt="Net at Once"></div>
+            <div><h1>Net at Once utlottning</h1><div class="muted">Registrering, prislista och snygg storbildsdragning.</div></div>
+          </div>
+          ${active === "register" ? "" : `<nav class="nav"><a href="/raffle" class="${active === "register" ? "active" : ""}">Deltagare</a><a href="/raffle/admin" class="${active === "admin" ? "active" : ""}">Admin</a><a href="/raffle/draw" data-open-draw>Dragning</a></nav>`}
+        </header>
+        ${content}
+      `;
+      document.querySelectorAll("[data-open-draw]").forEach(link => link.addEventListener("click", event => {
+        event.preventDefault();
+        openDrawWindow();
+      }));
+    }
+
+    async function renderRegister() {
+      const info = await api("/api/public-state");
+      shell(`
+        <main class="grid">
+          <section class="card span-7">
+            <h2>Anmäl dig till utlottningen</h2>
+            <p>Fyll i uppgifterna nedan för att vara med. Svaret på första frågan används bara som en rolig eventfråga och påverkar inte din chans att vinna.</p>
+            <form id="registrationForm">
+              <div class="field"><label>Organisation</label><input name="organization" autocomplete="organization" required></div>
+              <div class="grid"><div class="field span-6"><label>Förnamn</label><input name="firstName" autocomplete="given-name" required></div><div class="field span-6"><label>Efternamn</label><input name="lastName" autocomplete="family-name" required></div></div>
+              <div class="field"><label>Mailadress</label><input name="email" type="email" autocomplete="email" required></div>
+              <div class="field"><label>Fråga 1: Vilket år grundades Net at Once?</label><input name="founded" inputmode="numeric" placeholder="Skriv ditt svar"></div>
+              <div class="field"><label>Fråga 2: Vad har du för förväntningar på denna dag?</label><textarea name="expectations" placeholder="Skriv gärna några rader"></textarea></div>
+              <div class="field"><label>Fråga 3: Får Net at Once kontakta dig efter eventet?</label><select name="contactConsent" required><option value="">Välj ett alternativ</option><option value="Ja, jag samtycker till att Net at Once får kontakta mig efter eventet med relevant information och uppföljning.">Ja, jag samtycker till att Net at Once får kontakta mig efter eventet med relevant information och uppföljning.</option><option value="Nej tack, jag vill inte bli kontaktad efter eventet.">Nej tack, jag vill inte bli kontaktad efter eventet.</option></select></div>
+              <button type="submit">Skicka in anmälan</button>
+            </form>
+          </section>
+          <aside class="card span-5">
+            <h2>Så fungerar det</h2>
+            <p>När du skickar in din anmälan är du med i utlottningen. Varje pris dras separat och helt slumpmässigt av programmet.</p>
+            <p>Arrangören kan inte se eller välja vinnare i förväg. Vinnaren avslöjas först på skärmen när dragningen körs.</p>
+            <div class="stat"><span class="muted">Registrerade just nu</span><strong>${info.count}</strong></div>
+          </aside>
+        </main>
+      `, "register");
+      document.getElementById("registrationForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const body = Object.fromEntries(new FormData(event.currentTarget).entries());
+        try {
+          await api("/api/register", { method: "POST", body: JSON.stringify(body) });
+          document.querySelector(".span-7").innerHTML = `<h2>Tack, du är registrerad!</h2><p>Din anmälan är sparad. Lycka till i utlottningen.</p><button type="button" id="again">Registrera en till person</button>`;
+          document.getElementById("again").addEventListener("click", renderRegister);
+        } catch (error) {
+          toast(error.message);
+        }
+      });
+    }
+
+    function renderLogin() {
+      shell(`
+        <main class="grid"><section class="card span-5"><h2>Admininloggning</h2><p>Logga in för att se registreringar, lägga till priser och starta storbildsdragningen.</p><form id="loginForm"><div class="field"><label>Användarnamn</label><input name="username" autocomplete="username" required></div><div class="field"><label>Lösenord</label><input name="password" type="password" autocomplete="current-password" required></div><button type="submit">Logga in</button></form></section></main>
+      `, "admin");
+      document.getElementById("loginForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        try {
+          await api("/api/login", { method: "POST", body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries())) });
+          renderAdmin();
+        } catch (error) {
+          toast(error.message);
+        }
+      });
+    }
+
+    async function loadAdminState() {
+      state = await api("/api/admin/state");
+      return state;
+    }
+
+    async function renderAdmin() {
+      try {
+        await loadAdminState();
+      } catch {
+        return renderLogin();
+      }
+      const winners = new Set(state.prizes.map(prize => prize.winnerId).filter(Boolean));
+      const regRows = state.registrations.map(reg => `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${winners.has(reg.id) ? '<span class="pill">Vinnare</span>' : ""}</td></tr>`).join("");
+      const prizeRows = state.prizes.map((prize, index) => {
+        const winner = state.registrations.find(reg => reg.id === prize.winnerId);
+        return `<tr><td>${index + 1}</td><td><input data-prize-name="${prize.id}" value="${escapeHtml(prize.name)}"></td><td>${winner ? escapeHtml(fullName(winner)) : '<span class="muted">Ej dragen</span>'}</td><td><button class="secondary" data-remove-prize="${prize.id}" type="button">Ta bort</button></td></tr>`;
+      }).join("");
+      shell(`
+        <main class="grid">
+          <section class="card span-4"><h2>Översikt</h2><div class="grid"><div class="stat span-6"><span class="muted">Deltagare</span><strong>${state.registrations.length}</strong></div><div class="stat span-6"><span class="muted">Priser</span><strong>${state.prizes.length}</strong></div></div><p class="small">Data sparas på servern och delas mellan deltagare, admin och storbild.</p><div class="row"><button id="exportExcel" class="secondary" type="button">Exportera Excel</button><button id="exportCsv" class="secondary" type="button">Exportera CSV</button><button id="logout" class="secondary" type="button">Logga ut</button></div></section>
+          <section class="card span-8"><h2>QR-kod för deltagare</h2><p>QR-koden går till den publika registreringssidan.</p><div class="field"><label>Publik registreringslänk</label><input id="publicUrl" value="${escapeHtml(state.publicUrl || location.origin + "/raffle")}"></div><div class="grid"><div class="span-6"><div class="qrbox"><canvas id="qrCanvas" width="320" height="320"></canvas></div></div><div class="span-6"><label>Aktuell QR-länk</label><p id="qrLink" class="small"></p><div class="row"><button id="savePublicUrl" type="button">Uppdatera QR</button><button id="copyUrl" class="secondary" type="button">Kopiera länk</button></div></div></div></section>
+          <section class="card span-5"><h2>Priser</h2><div class="field"><label>Lägg till pris</label><div class="row"><input id="newPrize" placeholder="Ex. Neat Frame, Jabra Evolve3 85" style="flex:1;min-width:220px;"><button id="addPrize" type="button">Lägg till</button></div></div><div class="table-wrap"><table class="prizes-table"><thead><tr><th>#</th><th>Pris</th><th>Vinnare</th><th></th></tr></thead><tbody>${prizeRows || '<tr><td colspan="4" class="muted">Inga priser ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="resetDraw" class="secondary" type="button">Återställ dragning</button><button id="openDrawWindow" class="secondary" type="button">Öppna storbild i separat fönster</button></div></section>
+          <section class="card span-7"><h2>Registreringar</h2><div class="table-wrap"><table class="registrations-table"><thead><tr><th>Namn</th><th>Mail</th><th>År</th><th>Förväntningar</th><th>Kontakt</th><th>Status</th></tr></thead><tbody>${regRows || '<tr><td colspan="6" class="muted">Inga registreringar ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="deleteAll" class="danger" type="button">Radera alla registreringar</button></div></section>
+        </main>
+      `, "admin");
+      updateQr();
+      document.getElementById("savePublicUrl").addEventListener("click", async () => { state = await api("/api/admin/public-url", { method: "PATCH", body: JSON.stringify({ publicUrl: document.getElementById("publicUrl").value.trim() }) }); updateQr(); toast("QR-länken är uppdaterad."); });
+      document.getElementById("copyUrl").addEventListener("click", async () => { await navigator.clipboard.writeText(registerUrl()); toast("Länken är kopierad."); });
+      document.getElementById("addPrize").addEventListener("click", async () => { const name = document.getElementById("newPrize").value.trim(); if (!name) return toast("Skriv namnet på priset först."); await api("/api/admin/prizes", { method: "POST", body: JSON.stringify({ name }) }); renderAdmin(); });
+      document.querySelectorAll("[data-prize-name]").forEach(input => input.addEventListener("change", async event => { await api(`/api/admin/prizes/${event.target.dataset.prizeName}`, { method: "PATCH", body: JSON.stringify({ name: event.target.value }) }); toast("Priset är uppdaterat."); }));
+      document.querySelectorAll("[data-remove-prize]").forEach(button => button.addEventListener("click", async event => { await api(`/api/admin/prizes/${event.target.dataset.removePrize}`, { method: "DELETE" }); renderAdmin(); }));
+      document.getElementById("resetDraw").addEventListener("click", async () => { await api("/api/admin/reset-draw", { method: "POST" }); renderAdmin(); });
+      document.getElementById("deleteAll").addEventListener("click", async () => { if (!confirm("Vill du radera alla registreringar?")) return; await api("/api/admin/registrations", { method: "DELETE" }); renderAdmin(); });
+      document.getElementById("openDrawWindow").addEventListener("click", openDrawWindow);
+      document.getElementById("logout").addEventListener("click", async () => { await api("/api/logout", { method: "POST" }); renderLogin(); });
+      document.getElementById("exportCsv").addEventListener("click", exportCsv);
+      document.getElementById("exportExcel").addEventListener("click", exportExcel);
+    }
+
+    async function renderDraw() {
+      document.body.classList.add("presentation");
+      app.className = "app";
+      try {
+        await loadAdminState();
+      } catch {
+        return renderLogin();
+      }
+      const nextPrize = state.prizes.find(prize => !prize.winnerId);
+      const drawnPrizes = state.prizes.filter(prize => prize.winnerId);
+      const finalBoard = !nextPrize && drawnPrizes.length ? `<div class="final-title">Kvällens vinnare</div><div class="final-board">${drawnPrizes.map((prize, index) => {
+        const winner = state.registrations.find(reg => reg.id === prize.winnerId);
+        return `<div class="final-card" style="animation-delay:${index * 140}ms"><span class="final-prize">${escapeHtml(prize.name)}</span><span class="final-winner">${winner ? escapeHtml(fullName(winner)) : "Okänd vinnare"}</span><span class="final-organization">${winner ? escapeHtml(winner.organization) : ""}</span></div>`;
+      }).join("")}</div>` : "";
+      app.innerHTML = `<main><section class="draw-stage"><div class="draw-content ${finalBoard ? "final-mode" : ""}"><img class="draw-logo" src="/net-at-once-logo.png" alt="Net at Once">${finalBoard || `<h2>${nextPrize ? escapeHtml(nextPrize.name) : "Alla priser är dragna"}</h2><p id="drawSub">${nextPrize ? "Klicka på skärmen eller tryck mellanslag för att starta dragningen." : "Återställ dragningen i adminvyn för att dra igen."}</p><div class="slot" id="slot"><div class="slot-name" id="slotName">${state.registrations.length ? "Klicka för att starta" : "Inga deltagare"}</div></div>`}</div></section></main>`;
+      if (finalBoard) {
+        requestAnimationFrame(fitFinalScreen);
+        window.onresize = fitFinalScreen;
+      }
+      const start = () => {
+        if (!nextPrize || !state.registrations.length || spinTimer || pendingWinner) return;
+        runDraw(nextPrize);
+      };
+      document.querySelector(".draw-stage").addEventListener("click", start);
+      document.onkeydown = event => {
+        if (event.code === "Space" || event.code === "Enter") {
+          event.preventDefault();
+          start();
+        }
+      };
+    }
+
+    async function runDraw(prize) {
+      const slotBox = document.getElementById("slot");
+      const slot = document.getElementById("slotName");
+      slotBox.classList.add("spinning");
+      slot.classList.remove("winner");
+      const result = await api("/api/admin/draw", { method: "POST", body: JSON.stringify({ prizeId: prize.id }) });
+      pendingWinner = result.winner;
+      const winnerName = fullName(pendingWinner).toUpperCase();
+      const start = performance.now();
+      const duration = 5200;
+      const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ0123456789!?";
+      clearInterval(spinTimer);
+      spinTimer = setInterval(() => {
+        const progress = Math.min((performance.now() - start) / duration, 1);
+        const revealCount = progress < 0.62 ? 0 : Math.floor(((progress - 0.62) / 0.38) * winnerName.length);
+        slot.textContent = Array.from(winnerName).map((char, index) => char === " " ? " " : index < revealCount ? char : glyphs[Math.floor(Math.random() * glyphs.length)]).join("");
+        document.getElementById("drawSub").textContent = progress < 0.62 ? "Blandar deltagare..." : "Nu avslöjas vinnaren...";
+        if (progress >= 1) {
+          clearInterval(spinTimer);
+          spinTimer = 0;
+          state = result.state;
+          slotBox.classList.remove("spinning");
+          slot.textContent = fullName(pendingWinner);
+          slot.classList.add("winner");
+          document.getElementById("drawSub").textContent = `${pendingWinner.organization} vinner ${prize.name}.`;
+          pendingWinner = null;
+          confetti();
+          setTimeout(renderDraw, 5200);
+        }
+      }, 70);
+    }
+
+    function fitFinalScreen() {
+      const content = document.querySelector(".draw-content.final-mode");
+      const board = document.querySelector(".final-board");
+      if (!content || !board) return;
+      const count = board.querySelectorAll(".final-card").length;
+      const columns = count <= 2 ? count : 2;
+      const rows = Math.ceil(count / columns);
+      const style = getComputedStyle(content);
+      const fixed = Array.from(content.children).filter(child => child !== board).reduce((sum, child) => sum + child.getBoundingClientRect().height, 0);
+      const gap = parseFloat(style.gap) || 0;
+      const availableHeight = Math.max(140, window.innerHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - fixed - gap * 2 - 90);
+      const availableWidth = Math.max(280, Math.min(1100, content.clientWidth));
+      const cardWidth = (availableWidth - gap * (columns - 1)) / columns;
+      const cardHeight = (availableHeight - gap * (rows - 1)) / rows;
+      const longest = Math.max(...Array.from(board.querySelectorAll(".final-winner")).map(item => item.textContent.trim().length), 8);
+      board.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+      content.style.setProperty("--final-board-height", `${availableHeight}px`);
+      board.style.setProperty("--final-winner-size", `${Math.max(24, Math.min(cardHeight * 0.34, cardWidth / Math.min(longest, 18) * 1.35, 76))}px`);
+      board.style.setProperty("--final-prize-size", `${Math.max(15, Math.min(cardHeight * 0.16, 34))}px`);
+      board.style.setProperty("--final-org-size", `${Math.max(13, Math.min(cardHeight * 0.12, 22))}px`);
+    }
+
+    function openDrawWindow() {
+      const drawWindow = window.open(`${location.origin}/raffle/draw`, "netAtOnceDraw", "popup=yes,width=1440,height=900");
+      if (drawWindow) drawWindow.focus();
+      else toast("Webbläsaren blockerade popup-fönstret. Tillåt popup och försök igen.");
+    }
+
+    function updateQr() {
+      const url = registerUrl();
+      document.getElementById("qrLink").textContent = url;
+      drawQr(document.getElementById("qrCanvas"), url);
+    }
+
+    function drawQr(canvas, text) {
+      const qr = qrcode(0, "H");
+      qr.addData(text);
+      qr.make();
+      const moduleCount = qr.getModuleCount();
+      const quiet = 4;
+      const scale = Math.max(4, Math.floor(320 / (moduleCount + quiet * 2)));
+      const size = (moduleCount + quiet * 2) * scale;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--cp-surface").trim();
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--cp-text").trim();
+      for (let row = 0; row < moduleCount; row += 1) {
+        for (let col = 0; col < moduleCount; col += 1) {
+          if (qr.isDark(row, col)) ctx.fillRect((col + quiet) * scale, (row + quiet) * scale, scale, scale);
+        }
+      }
+      const img = new Image();
+      img.onload = () => {
+        const bounds = getVisibleLogoBounds(img);
+        const maxWidth = Math.round(size * 0.18);
+        const maxHeight = Math.round(size * 0.14);
+        const ratio = Math.min(maxWidth / bounds.width, maxHeight / bounds.height);
+        const logoWidth = Math.round(bounds.width * ratio);
+        const logoHeight = Math.round(bounds.height * ratio);
+        const pad = Math.round(size * 0.035);
+        const x = Math.round((size - logoWidth) / 2);
+        const y = Math.round((size - logoHeight) / 2);
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--cp-surface").trim();
+        ctx.beginPath();
+        ctx.roundRect(x - pad, y - pad, logoWidth + pad * 2, logoHeight + pad * 2, Math.round(size * 0.035));
+        ctx.fill();
+        ctx.drawImage(img, bounds.x, bounds.y, bounds.width, bounds.height, x, y, logoWidth, logoHeight);
+      };
+      img.src = "/net-at-once-logo.png";
+    }
+
+    function getVisibleLogoBounds(img) {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let minX = width, minY = height, maxX = -1, maxY = -1;
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const i = (y * width + x) * 4;
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+          if (a > 8 && Math.max(r, g, b) > 35 && Math.max(r, g, b) - Math.min(r, g, b) > 8) {
+            minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      return maxX < minX ? { x: 0, y: 0, width, height } : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    }
+
+    function confetti() {
+      for (let i = 0; i < 80; i += 1) {
+        const piece = document.createElement("div");
+        piece.style.cssText = `position:fixed;left:${Math.random() * 100}vw;top:-20px;width:10px;height:14px;background:#19b7b9;z-index:20;animation:fall 2300ms linear forwards;animation-delay:${Math.random() * 900}ms`;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 3600);
+      }
+    }
+
+    function exportCsv() {
+      const headers = ["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris"];
+      const lines = [headers, ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", ")])].map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","));
+      download("net-at-once-registreringar.csv", lines.join("\n"), "text/csv;charset=utf-8");
+    }
+
+    function exportExcel() {
+      const rows = [["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris"], ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", ")])];
+      const html = `<!doctype html><html><head><meta charset="UTF-8"></head><body><table>${rows.map(row => `<tr>${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
+      download("net-at-once-utlottning.xls", html, "application/vnd.ms-excel;charset=utf-8");
+    }
+
+    function download(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function render() {
+      document.onkeydown = null;
+      window.onresize = null;
+      if (isAdminRoute()) return renderAdmin();
+      if (isDrawRoute()) return renderDraw();
+      return renderRegister();
+    }
+    render().catch(error => {
+      app.innerHTML = `<div class="card"><h2>Något gick fel</h2><p>${escapeHtml(error.message)}</p></div>`;
+    });
+  </script>
+</body>
+</html>
