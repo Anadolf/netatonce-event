@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { Pool } = require("pg");
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
@@ -10,6 +11,12 @@ const DATA_FILE = path.join(DATA_DIR, "raffle-data.json");
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "123456";
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
+const DATABASE_URL = process.env.DATABASE_URL || "";
+const pool = DATABASE_URL ? new Pool({
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 3
+}) : null;
 const sessions = new Set();
 
 const MIME = {
@@ -35,17 +42,11 @@ function defaultState() {
   };
 }
 
-function ensureDataFile() {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) writeState(defaultState());
-}
-
-function readState() {
-  ensureDataFile();
-  const parsed = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-  const prizes = Array.isArray(parsed.prizes) && parsed.prizes.length ? parsed.prizes : defaultState().prizes;
+function normalizeState(parsed) {
+  const base = parsed && typeof parsed === "object" ? parsed : defaultState();
+  const prizes = Array.isArray(base.prizes) && base.prizes.length ? base.prizes : defaultState().prizes;
   return {
-    registrations: Array.isArray(parsed.registrations) ? parsed.registrations : [],
+    registrations: Array.isArray(base.registrations) ? base.registrations : [],
     prizes: prizes.map(prize => ({
       id: prize.id || crypto.randomUUID(),
       name: clean(prize.name || "Pris", 180),
@@ -53,13 +54,82 @@ function readState() {
       sponsorName: clean(prize.sponsorName, 180),
       winnerId: prize.winnerId || ""
     })),
-    publicUrl: typeof parsed.publicUrl === "string" ? parsed.publicUrl : ""
+    publicUrl: typeof base.publicUrl === "string" ? base.publicUrl : ""
   };
 }
 
-function writeState(state) {
+async function ensureDatabase() {
+  if (!pool) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS raffle_state (
+      id text PRIMARY KEY,
+      data jsonb NOT NULL,
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await pool.query(
+    `INSERT INTO raffle_state (id, data)
+     VALUES ($1, $2::jsonb)
+     ON CONFLICT (id) DO NOTHING`,
+    ["main", JSON.stringify(defaultState())]
+  );
+}
+
+function ensureDataFile() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+  if (!fs.existsSync(DATA_FILE)) writeState(defaultState());
+}
+
+async function readState() {
+  if (pool) {
+    const result = await pool.query("SELECT data FROM raffle_state WHERE id = $1", ["main"]);
+    return normalizeState(result.rows[0]?.data);
+  }
+  ensureDataFile();
+  const parsed = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+  return normalizeState(parsed);
+}
+
+async function writeState(state) {
+  const normalized = normalizeState(state);
+  if (pool) {
+    await pool.query(
+      `UPDATE raffle_state SET data = $2::jsonb, updated_at = now() WHERE id = $1`,
+      ["main", JSON.stringify(normalized)]
+    );
+    return normalized;
+  }
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(DATA_FILE, JSON.stringify(normalized, null, 2));
+  return normalized;
+}
+
+async function updateState(mutator) {
+  if (!pool) {
+    const state = await readState();
+    const result = await mutator(state);
+    await writeState(state);
+    return result ?? state;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query("SELECT data FROM raffle_state WHERE id = $1 FOR UPDATE", ["main"]);
+    const state = normalizeState(result.rows[0]?.data);
+    const mutatorResult = await mutator(state);
+    await client.query(
+      `UPDATE raffle_state SET data = $2::jsonb, updated_at = now() WHERE id = $1`,
+      ["main", JSON.stringify(normalizeState(state))]
+    );
+    await client.query("COMMIT");
+    return mutatorResult ?? state;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 function send(res, status, body, contentType = "application/json; charset=utf-8", headers = {}) {
@@ -140,7 +210,7 @@ function serveFile(req, res, requestedPath) {
 async function handleApi(req, res, pathname) {
   try {
     if (req.method === "GET" && pathname === "/api/public-state") {
-      const state = readState();
+      const state = await readState();
       return json(res, 200, {
         count: state.registrations.length,
         prizes: state.prizes.map(prize => ({
@@ -159,30 +229,34 @@ async function handleApi(req, res, pathname) {
       if (!clean(body.organization) || !clean(body.firstName) || !clean(body.lastName) || !email) {
         return json(res, 400, { error: "Fyll i organisation, namn och mailadress." });
       }
-      const state = readState();
-      const firstName = clean(body.firstName, 100);
-      const lastName = clean(body.lastName, 100);
-      const requestedName = normalizeIdentity(`${firstName} ${lastName}`);
-      const duplicate = state.registrations.find(reg =>
-        String(reg.email).toLowerCase() === email ||
-        normalizeIdentity(`${reg.firstName} ${reg.lastName}`) === requestedName
-      );
-      if (duplicate) {
+      const result = await updateState(state => {
+        const firstName = clean(body.firstName, 100);
+        const lastName = clean(body.lastName, 100);
+        const requestedName = normalizeIdentity(`${firstName} ${lastName}`);
+        const duplicate = state.registrations.find(reg =>
+          String(reg.email).toLowerCase() === email ||
+          normalizeIdentity(`${reg.firstName} ${reg.lastName}`) === requestedName
+        );
+        if (duplicate) {
+          return { duplicate: true };
+        }
+        state.registrations.push({
+          id: crypto.randomUUID(),
+          organization: clean(body.organization, 160),
+          firstName,
+          lastName,
+          email,
+          founded: clean(body.founded, 40),
+          expectations: clean(body.expectations, 1000),
+          contactConsent: clean(body.contactConsent, 160),
+          createdAt: new Date().toISOString()
+        });
+        return { duplicate: false, count: state.registrations.length };
+      });
+      if (result.duplicate) {
         return json(res, 409, { error: "Du är redan anmäld och kan inte delta mer än 1 gång." });
       }
-      state.registrations.push({
-        id: crypto.randomUUID(),
-        organization: clean(body.organization, 160),
-        firstName,
-        lastName,
-        email,
-        founded: clean(body.founded, 40),
-        expectations: clean(body.expectations, 1000),
-        contactConsent: clean(body.contactConsent, 160),
-        createdAt: new Date().toISOString()
-      });
-      writeState(state);
-      return json(res, 201, { ok: true, count: state.registrations.length });
+      return json(res, 201, { ok: true, count: result.count });
     }
 
     if (req.method === "POST" && pathname === "/api/login") {
@@ -208,79 +282,92 @@ async function handleApi(req, res, pathname) {
     if (pathname.startsWith("/api/admin") && !requireAdmin(req, res)) return;
 
     if (req.method === "GET" && pathname === "/api/admin/state") {
-      return json(res, 200, readState());
+      return json(res, 200, await readState());
     }
 
     if (req.method === "PATCH" && pathname === "/api/admin/public-url") {
       const body = await readBody(req);
-      const state = readState();
-      state.publicUrl = clean(body.publicUrl, 500);
-      writeState(state);
+      const state = await updateState(state => {
+        state.publicUrl = clean(body.publicUrl, 500);
+      });
       return json(res, 200, state);
     }
 
     if (req.method === "POST" && pathname === "/api/admin/prizes") {
       const body = await readBody(req);
-      const state = readState();
       const name = clean(body.name, 180);
       if (!name) return json(res, 400, { error: "Skriv namnet på priset." });
-      state.prizes.push({
-        id: crypto.randomUUID(),
-        name,
-        productText: clean(body.productText, 1000),
-        sponsorName: clean(body.sponsorName, 180),
-        winnerId: ""
+      const state = await updateState(state => {
+        state.prizes.push({
+          id: crypto.randomUUID(),
+          name,
+          productText: clean(body.productText, 1000),
+          sponsorName: clean(body.sponsorName, 180),
+          winnerId: ""
+        });
       });
-      writeState(state);
       return json(res, 201, state);
     }
 
     const prizeMatch = pathname.match(/^\/api\/admin\/prizes\/([^/]+)$/);
     if (prizeMatch && req.method === "PATCH") {
       const body = await readBody(req);
-      const state = readState();
-      const prize = state.prizes.find(item => item.id === prizeMatch[1]);
-      if (!prize) return json(res, 404, { error: "Priset finns inte." });
-      prize.name = clean(body.name, 180) || prize.name;
-      prize.productText = clean(body.productText, 1000);
-      prize.sponsorName = clean(body.sponsorName, 180);
-      writeState(state);
+      let found = false;
+      const state = await updateState(state => {
+        const prize = state.prizes.find(item => item.id === prizeMatch[1]);
+        if (!prize) return;
+        found = true;
+        prize.name = clean(body.name, 180) || prize.name;
+        prize.productText = clean(body.productText, 1000);
+        prize.sponsorName = clean(body.sponsorName, 180);
+      });
+      if (!found) return json(res, 404, { error: "Priset finns inte." });
       return json(res, 200, state);
     }
     if (prizeMatch && req.method === "DELETE") {
-      const state = readState();
-      state.prizes = state.prizes.filter(item => item.id !== prizeMatch[1]);
-      writeState(state);
+      const state = await updateState(state => {
+        state.prizes = state.prizes.filter(item => item.id !== prizeMatch[1]);
+      });
       return json(res, 200, state);
     }
 
     if (req.method === "POST" && pathname === "/api/admin/reset-draw") {
-      const state = readState();
-      state.prizes.forEach(prize => prize.winnerId = "");
-      writeState(state);
+      const state = await updateState(state => {
+        state.prizes.forEach(prize => prize.winnerId = "");
+      });
       return json(res, 200, state);
     }
 
     if (req.method === "DELETE" && pathname === "/api/admin/registrations") {
-      const state = readState();
-      state.registrations = [];
-      state.prizes.forEach(prize => prize.winnerId = "");
-      writeState(state);
+      const state = await updateState(state => {
+        state.registrations = [];
+        state.prizes.forEach(prize => prize.winnerId = "");
+      });
       return json(res, 200, state);
     }
 
     if (req.method === "POST" && pathname === "/api/admin/draw") {
       const body = await readBody(req);
-      const state = readState();
-      const prize = state.prizes.find(item => item.id === body.prizeId && !item.winnerId);
-      if (!prize) return json(res, 404, { error: "Priset finns inte eller är redan draget." });
-      const used = new Set(state.prizes.map(item => item.winnerId).filter(Boolean));
-      const candidates = state.registrations.filter(reg => !used.has(reg.id));
-      if (!candidates.length) return json(res, 409, { error: "Det finns inga deltagare kvar att dra." });
-      const winner = candidates[crypto.randomInt(candidates.length)];
-      prize.winnerId = winner.id;
-      writeState(state);
-      return json(res, 200, { state, prize, winner });
+      let drawResult = null;
+      await updateState(state => {
+        const prize = state.prizes.find(item => item.id === body.prizeId && !item.winnerId);
+        if (!prize) {
+          drawResult = { status: 404 };
+          return;
+        }
+        const used = new Set(state.prizes.map(item => item.winnerId).filter(Boolean));
+        const candidates = state.registrations.filter(reg => !used.has(reg.id));
+        if (!candidates.length) {
+          drawResult = { status: 409 };
+          return;
+        }
+        const winner = candidates[crypto.randomInt(candidates.length)];
+        prize.winnerId = winner.id;
+        drawResult = { status: 200, state, prize, winner };
+      });
+      if (drawResult?.status === 404) return json(res, 404, { error: "Priset finns inte eller är redan draget." });
+      if (drawResult?.status === 409) return json(res, 409, { error: "Det finns inga deltagare kvar att dra." });
+      return json(res, 200, drawResult);
     }
 
     json(res, 404, { error: "API-routen finns inte." });
@@ -307,7 +394,18 @@ const server = http.createServer((req, res) => {
   serveFile(req, res, pathname.slice(1));
 });
 
-server.listen(PORT, () => {
-  ensureDataFile();
-  console.log(`Net at Once event app listening on ${PORT}`);
+async function start() {
+  if (process.env.RENDER && !pool) {
+    throw new Error("DATABASE_URL must be configured in Render so raffle data is persisted.");
+  }
+  if (pool) await ensureDatabase();
+  else ensureDataFile();
+  server.listen(PORT, () => {
+    console.log(`Net at Once event app listening on ${PORT}`);
+  });
+}
+
+start().catch(error => {
+  console.error(error);
+  process.exit(1);
 });

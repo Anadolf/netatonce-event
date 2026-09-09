@@ -12,9 +12,3 @@ services:
         value: "123456"
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATA_DIR
-        value: /var/data
-    disk:
-      name: raffle-data
-      mountPath: /var/data
-      sizeGB: 1
