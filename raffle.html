@@ -120,6 +120,12 @@
     .pill { display: inline-flex; align-items: center; border: 1px solid var(--cp-border); border-radius: 999px; padding: 0.32rem 0.65rem; background: var(--cp-surface-soft); color: var(--cp-text-muted); font-size: 0.86rem; font-weight: 800; overflow-wrap: anywhere; }
     .stat { border: 1px solid var(--cp-border); border-radius: 16px; padding: 16px; background: var(--cp-surface); }
     .stat strong { display: block; font-size: 2rem; letter-spacing: -0.06em; }
+    .notice { border: 1px solid var(--cp-border); border-radius: 16px; padding: 14px; margin-bottom: 14px; background: var(--cp-accent-soft); font-weight: 800; }
+    .notice.error { border-color: var(--cp-danger); color: var(--cp-danger); background: var(--cp-surface); }
+    .prize-list { display: grid; gap: 12px; margin-top: 16px; }
+    .prize-preview { border: 1px solid var(--cp-border); border-radius: 16px; background: var(--cp-surface); padding: 14px; }
+    .prize-preview strong { display: block; margin-bottom: 4px; }
+    .prize-preview p { margin: 0; }
     .table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-surface); }
     table { width: 100%; min-width: 100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid var(--cp-border); padding: 10px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
@@ -209,11 +215,13 @@
 
     async function renderRegister() {
       const info = await api("/api/public-state");
+      const prizeList = renderPrizeList(info.prizes || []);
       shell(`
         <main class="grid">
           <section class="card span-7">
             <h2>Anmäl dig till utlottningen</h2>
             <p>Fyll i uppgifterna nedan för att vara med. Svaret på första frågan används bara som en rolig eventfråga och påverkar inte din chans att vinna.</p>
+            <div id="formMessage"></div>
             <form id="registrationForm">
               <div class="field"><label>Organisation</label><input name="organization" autocomplete="organization" required></div>
               <div class="grid"><div class="field span-6"><label>Förnamn</label><input name="firstName" autocomplete="given-name" required></div><div class="field span-6"><label>Efternamn</label><input name="lastName" autocomplete="family-name" required></div></div>
@@ -237,12 +245,18 @@
         const body = Object.fromEntries(new FormData(event.currentTarget).entries());
         try {
           await api("/api/register", { method: "POST", body: JSON.stringify(body) });
-          document.querySelector(".span-7").innerHTML = `<h2>Tack, du är registrerad!</h2><p>Din anmälan är sparad. Lycka till i utlottningen.</p><button type="button" id="again">Registrera en till person</button>`;
-          document.getElementById("again").addEventListener("click", renderRegister);
+          document.querySelector(".span-7").innerHTML = `<h2>Du är nu anmäld till tävlingen!</h2><p>Din anmälan är sparad. Lycka till i utlottningen.</p>${prizeList ? `<h3>Det här kan du vinna</h3>${prizeList}` : ""}`;
         } catch (error) {
+          document.getElementById("formMessage").innerHTML = `<div class="notice error">${escapeHtml(error.message)}</div>`;
           toast(error.message);
         }
       });
+    }
+
+    function renderPrizeList(prizes) {
+      const visiblePrizes = prizes.filter(prize => prize.name);
+      if (!visiblePrizes.length) return "";
+      return `<div class="prize-list">${visiblePrizes.map(prize => `<div class="prize-preview"><strong>${escapeHtml(prize.name)}</strong>${prize.productText ? `<p>${escapeHtml(prize.productText)}</p>` : ""}</div>`).join("")}</div>`;
     }
 
     function renderLogin() {
@@ -275,21 +289,27 @@
       const regRows = state.registrations.map(reg => `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${winners.has(reg.id) ? '<span class="pill">Vinnare</span>' : ""}</td></tr>`).join("");
       const prizeRows = state.prizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
-        return `<tr><td>${index + 1}</td><td><input data-prize-name="${prize.id}" value="${escapeHtml(prize.name)}"></td><td>${winner ? escapeHtml(fullName(winner)) : '<span class="muted">Ej dragen</span>'}</td><td><button class="secondary" data-remove-prize="${prize.id}" type="button">Ta bort</button></td></tr>`;
+        return `<tr><td>${index + 1}</td><td><input data-prize-name="${prize.id}" value="${escapeHtml(prize.name)}"><textarea data-prize-text="${prize.id}" placeholder="Valfri kort produkttext till deltagarsidan">${escapeHtml(prize.productText || "")}</textarea></td><td>${winner ? escapeHtml(fullName(winner)) : '<span class="muted">Ej dragen</span>'}</td><td><button class="secondary" data-remove-prize="${prize.id}" type="button">Ta bort</button></td></tr>`;
       }).join("");
       shell(`
         <main class="grid">
           <section class="card span-4"><h2>Översikt</h2><div class="grid"><div class="stat span-6"><span class="muted">Deltagare</span><strong>${state.registrations.length}</strong></div><div class="stat span-6"><span class="muted">Priser</span><strong>${state.prizes.length}</strong></div></div><p class="small">Data sparas på servern och delas mellan deltagare, admin och storbild.</p><div class="row"><button id="exportExcel" class="secondary" type="button">Exportera Excel</button><button id="exportCsv" class="secondary" type="button">Exportera CSV</button><button id="logout" class="secondary" type="button">Logga ut</button></div></section>
           <section class="card span-8"><h2>QR-kod för deltagare</h2><p>QR-koden går till den publika registreringssidan.</p><div class="field"><label>Publik registreringslänk</label><input id="publicUrl" value="${escapeHtml(state.publicUrl || location.origin + "/raffle")}"></div><div class="grid"><div class="span-6"><div class="qrbox"><canvas id="qrCanvas" width="320" height="320"></canvas></div></div><div class="span-6"><label>Aktuell QR-länk</label><p id="qrLink" class="small"></p><div class="row"><button id="savePublicUrl" type="button">Uppdatera QR</button><button id="copyUrl" class="secondary" type="button">Kopiera länk</button></div></div></div></section>
-          <section class="card span-5"><h2>Priser</h2><div class="field"><label>Lägg till pris</label><div class="row"><input id="newPrize" placeholder="Ex. Neat Frame, Jabra Evolve3 85" style="flex:1;min-width:220px;"><button id="addPrize" type="button">Lägg till</button></div></div><div class="table-wrap"><table class="prizes-table"><thead><tr><th>#</th><th>Pris</th><th>Vinnare</th><th></th></tr></thead><tbody>${prizeRows || '<tr><td colspan="4" class="muted">Inga priser ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="resetDraw" class="secondary" type="button">Återställ dragning</button><button id="openDrawWindow" class="secondary" type="button">Öppna storbild i separat fönster</button></div></section>
+          <section class="card span-5"><h2>Priser</h2><div class="field"><label>Lägg till pris</label><input id="newPrize" placeholder="Ex. Neat Frame, Jabra Evolve3 85"><textarea id="newPrizeText" placeholder="Valfri kort produkttext som visas efter anmälan"></textarea><button id="addPrize" type="button">Lägg till</button></div><div class="table-wrap"><table class="prizes-table"><thead><tr><th>#</th><th>Pris och produkttext</th><th>Vinnare</th><th></th></tr></thead><tbody>${prizeRows || '<tr><td colspan="4" class="muted">Inga priser ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="resetDraw" class="secondary" type="button">Återställ dragning</button><button id="openDrawWindow" class="secondary" type="button">Öppna storbild i separat fönster</button></div></section>
           <section class="card span-7"><h2>Registreringar</h2><div class="table-wrap"><table class="registrations-table"><thead><tr><th>Namn</th><th>Mail</th><th>År</th><th>Förväntningar</th><th>Kontakt</th><th>Status</th></tr></thead><tbody>${regRows || '<tr><td colspan="6" class="muted">Inga registreringar ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="deleteAll" class="danger" type="button">Radera alla registreringar</button></div></section>
         </main>
       `, "admin");
       updateQr();
       document.getElementById("savePublicUrl").addEventListener("click", async () => { state = await api("/api/admin/public-url", { method: "PATCH", body: JSON.stringify({ publicUrl: document.getElementById("publicUrl").value.trim() }) }); updateQr(); toast("QR-länken är uppdaterad."); });
       document.getElementById("copyUrl").addEventListener("click", async () => { await navigator.clipboard.writeText(registerUrl()); toast("Länken är kopierad."); });
-      document.getElementById("addPrize").addEventListener("click", async () => { const name = document.getElementById("newPrize").value.trim(); if (!name) return toast("Skriv namnet på priset först."); await api("/api/admin/prizes", { method: "POST", body: JSON.stringify({ name }) }); renderAdmin(); });
-      document.querySelectorAll("[data-prize-name]").forEach(input => input.addEventListener("change", async event => { await api(`/api/admin/prizes/${event.target.dataset.prizeName}`, { method: "PATCH", body: JSON.stringify({ name: event.target.value }) }); toast("Priset är uppdaterat."); }));
+      document.getElementById("addPrize").addEventListener("click", async () => { const name = document.getElementById("newPrize").value.trim(); const productText = document.getElementById("newPrizeText").value.trim(); if (!name) return toast("Skriv namnet på priset först."); await api("/api/admin/prizes", { method: "POST", body: JSON.stringify({ name, productText }) }); renderAdmin(); });
+      document.querySelectorAll("[data-prize-name], [data-prize-text]").forEach(input => input.addEventListener("change", async event => {
+        const id = event.target.dataset.prizeName || event.target.dataset.prizeText;
+        const name = document.querySelector(`[data-prize-name="${id}"]`).value;
+        const productText = document.querySelector(`[data-prize-text="${id}"]`).value;
+        await api(`/api/admin/prizes/${id}`, { method: "PATCH", body: JSON.stringify({ name, productText }) });
+        toast("Priset är uppdaterat.");
+      }));
       document.querySelectorAll("[data-remove-prize]").forEach(button => button.addEventListener("click", async event => { await api(`/api/admin/prizes/${event.target.dataset.removePrize}`, { method: "DELETE" }); renderAdmin(); }));
       document.getElementById("resetDraw").addEventListener("click", async () => { await api("/api/admin/reset-draw", { method: "POST" }); renderAdmin(); });
       document.getElementById("deleteAll").addEventListener("click", async () => { if (!confirm("Vill du radera alla registreringar?")) return; await api("/api/admin/registrations", { method: "DELETE" }); renderAdmin(); });

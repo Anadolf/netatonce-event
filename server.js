@@ -28,8 +28,8 @@ function defaultState() {
   return {
     registrations: [],
     prizes: [
-      { id: crypto.randomUUID(), name: "Pris 1", winnerId: "" },
-      { id: crypto.randomUUID(), name: "Pris 2", winnerId: "" }
+      { id: crypto.randomUUID(), name: "Pris 1", productText: "", winnerId: "" },
+      { id: crypto.randomUUID(), name: "Pris 2", productText: "", winnerId: "" }
     ],
     publicUrl: ""
   };
@@ -43,9 +43,15 @@ function ensureDataFile() {
 function readState() {
   ensureDataFile();
   const parsed = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+  const prizes = Array.isArray(parsed.prizes) && parsed.prizes.length ? parsed.prizes : defaultState().prizes;
   return {
     registrations: Array.isArray(parsed.registrations) ? parsed.registrations : [],
-    prizes: Array.isArray(parsed.prizes) && parsed.prizes.length ? parsed.prizes : defaultState().prizes,
+    prizes: prizes.map(prize => ({
+      id: prize.id || crypto.randomUUID(),
+      name: clean(prize.name || "Pris", 180),
+      productText: clean(prize.productText, 1000),
+      winnerId: prize.winnerId || ""
+    })),
     publicUrl: typeof parsed.publicUrl === "string" ? parsed.publicUrl : ""
   };
 }
@@ -108,6 +114,10 @@ function clean(value, max = 500) {
   return String(value || "").trim().slice(0, max);
 }
 
+function normalizeIdentity(value) {
+  return clean(value, 300).toLowerCase().replace(/\s+/g, " ");
+}
+
 function publicOrigin(req) {
   const proto = req.headers["x-forwarded-proto"] || "http";
   const host = req.headers["x-forwarded-host"] || req.headers.host;
@@ -132,6 +142,11 @@ async function handleApi(req, res, pathname) {
       const state = readState();
       return json(res, 200, {
         count: state.registrations.length,
+        prizes: state.prizes.map(prize => ({
+          id: prize.id,
+          name: prize.name,
+          productText: prize.productText || ""
+        })),
         publicUrl: state.publicUrl || `${publicOrigin(req)}/raffle`
       });
     }
@@ -143,14 +158,21 @@ async function handleApi(req, res, pathname) {
         return json(res, 400, { error: "Fyll i organisation, namn och mailadress." });
       }
       const state = readState();
-      if (state.registrations.some(reg => String(reg.email).toLowerCase() === email)) {
-        return json(res, 409, { error: "Den här mailadressen är redan registrerad." });
+      const firstName = clean(body.firstName, 100);
+      const lastName = clean(body.lastName, 100);
+      const requestedName = normalizeIdentity(`${firstName} ${lastName}`);
+      const duplicate = state.registrations.find(reg =>
+        String(reg.email).toLowerCase() === email ||
+        normalizeIdentity(`${reg.firstName} ${reg.lastName}`) === requestedName
+      );
+      if (duplicate) {
+        return json(res, 409, { error: "Du är redan anmäld och kan inte delta mer än 1 gång." });
       }
       state.registrations.push({
         id: crypto.randomUUID(),
         organization: clean(body.organization, 160),
-        firstName: clean(body.firstName, 100),
-        lastName: clean(body.lastName, 100),
+        firstName,
+        lastName,
         email,
         founded: clean(body.founded, 40),
         expectations: clean(body.expectations, 1000),
@@ -200,7 +222,7 @@ async function handleApi(req, res, pathname) {
       const state = readState();
       const name = clean(body.name, 180);
       if (!name) return json(res, 400, { error: "Skriv namnet på priset." });
-      state.prizes.push({ id: crypto.randomUUID(), name, winnerId: "" });
+      state.prizes.push({ id: crypto.randomUUID(), name, productText: clean(body.productText, 1000), winnerId: "" });
       writeState(state);
       return json(res, 201, state);
     }
@@ -212,6 +234,7 @@ async function handleApi(req, res, pathname) {
       const prize = state.prizes.find(item => item.id === prizeMatch[1]);
       if (!prize) return json(res, 404, { error: "Priset finns inte." });
       prize.name = clean(body.name, 180) || prize.name;
+      prize.productText = clean(body.productText, 1000);
       writeState(state);
       return json(res, 200, state);
     }
