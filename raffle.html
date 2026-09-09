@@ -149,6 +149,9 @@
     .final-prize { display: block; font-size: var(--final-prize-size, 24px); font-weight: 800; color: #19b7b9; margin-bottom: 8px; }
     .final-winner { display: block; font-size: var(--final-winner-size, 46px); line-height: 1; font-weight: 950; letter-spacing: -0.06em; color: #ffffff; overflow-wrap: anywhere; }
     .final-organization { display: block; margin-top: 10px; font-size: var(--final-org-size, 18px); color: rgba(255, 255, 255, 0.74); }
+    .sponsor-thanks { width: min(900px, 100%); flex: 0 0 auto; border: 1px solid rgba(25, 183, 185, 0.45); border-radius: 16px; background: rgba(5, 8, 15, 0.58); padding: clamp(10px, 1.6vh, 16px); }
+    .sponsor-thanks h3 { color: #19b7b9; font-size: clamp(1rem, min(2vw, 2.8vh), 1.6rem); margin-bottom: 8px; }
+    .sponsor-thanks p { color: rgba(255, 255, 255, 0.82); margin: 0; font-size: clamp(0.82rem, min(1.35vw, 2.1vh), 1.05rem); line-height: 1.35; }
     @keyframes jitter { 0% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 100% { transform: translateX(-1px); } }
     @keyframes pop { 0% { transform: scale(0.92); opacity: 0.3; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes finalIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -329,10 +332,11 @@
       }
       const nextPrize = state.prizes.find(prize => !prize.winnerId);
       const drawnPrizes = state.prizes.filter(prize => prize.winnerId);
+      const sponsorThanks = `<div class="sponsor-thanks"><h3>Ett stort tack till våra prissponsorer</h3><p>Tack till Jabra och Neat som har bidragit med fina priser till dagens tävling.</p></div>`;
       const finalBoard = !nextPrize && drawnPrizes.length ? `<div class="final-title">Kvällens vinnare</div><div class="final-board">${drawnPrizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
         return `<div class="final-card" style="animation-delay:${index * 140}ms"><span class="final-prize">${escapeHtml(prize.name)}</span><span class="final-winner">${winner ? escapeHtml(fullName(winner)) : "Okänd vinnare"}</span><span class="final-organization">${winner ? escapeHtml(winner.organization) : ""}</span></div>`;
-      }).join("")}</div>` : "";
+      }).join("")}</div>${sponsorThanks}` : "";
       app.innerHTML = `<main><section class="draw-stage"><div class="draw-content ${finalBoard ? "final-mode" : ""}"><img class="draw-logo" src="/net-at-once-logo.png" alt="Net at Once">${finalBoard || `<h2>${nextPrize ? escapeHtml(nextPrize.name) : "Alla priser är dragna"}</h2><p id="drawSub">${nextPrize ? "Klicka på skärmen eller tryck mellanslag för att starta dragningen." : "Återställ dragningen i adminvyn för att dra igen."}</p><div class="slot" id="slot"><div class="slot-name" id="slotName">${state.registrations.length ? "Klicka för att starta" : "Inga deltagare"}</div></div>`}</div></section></main>`;
       if (finalBoard) {
         requestAnimationFrame(fitFinalScreen);
