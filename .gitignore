@@ -1,4 +1,6 @@
-data/
+data/*
+!data/
+!data/welcome-organizations.json
 node_modules/
 npm-debug.log*
 .env

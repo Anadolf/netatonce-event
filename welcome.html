@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Net at Once - Välkommen</title>
+  <link rel="icon" type="image/png" href="net-at-once-logo.png">
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(25, 183, 185, 0.24), transparent 34rem),
+        radial-gradient(circle at 88% 22%, rgba(18, 71, 158, 0.24), transparent 32rem),
+        linear-gradient(145deg, rgba(5, 8, 15, 0.98), rgba(18, 71, 158, 0.88));
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .screen {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 44px, rgba(255, 255, 255, 0.055) 44px 45px),
+        radial-gradient(circle at 50% 20%, rgba(25, 183, 185, 0.18), transparent 28rem);
+      isolation: isolate;
+    }
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: -24%;
+      background:
+        radial-gradient(circle at 24% 18%, rgba(25, 183, 185, 0.18), transparent 24rem),
+        radial-gradient(circle at 76% 72%, rgba(255, 255, 255, 0.08), transparent 26rem);
+      animation: stageSweep 13s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(5, 8, 15, 0.42), transparent 18%, transparent 82%, rgba(5, 8, 15, 0.42)),
+        linear-gradient(180deg, rgba(5, 8, 15, 0.52), transparent 24%, transparent 78%, rgba(5, 8, 15, 0.62));
+      pointer-events: none;
+      z-index: 1;
+    }
+    .orbital-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+    .org-name {
+      position: absolute;
+      left: var(--x, 50%);
+      top: var(--y, 50%);
+      max-width: min(34vw, 520px);
+      transform: translate(-50%, -50%) scale(var(--scale, 1));
+      color: #ffffff;
+      font-size: var(--size, clamp(1.15rem, 2vw, 2.5rem));
+      font-weight: var(--weight, 900);
+      line-height: 1.05;
+      letter-spacing: var(--tracking, -0.045em);
+      text-align: center;
+      text-wrap: balance;
+      text-shadow: 0 0 24px rgba(25, 183, 185, 0.72), 0 8px 26px rgba(0, 0, 0, 0.62);
+      opacity: 0.96;
+      filter: blur(0);
+      transition:
+        left 900ms cubic-bezier(0.22, 1, 0.36, 1),
+        top 900ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 900ms ease,
+        transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 900ms ease;
+      will-change: left, top, opacity, transform, filter;
+      pointer-events: none;
+    }
+    .org-name.hidden {
+      opacity: 0;
+      filter: blur(12px);
+      transform: translate(-50%, -50%) scale(1.16);
+    }
+    .center-safe-zone {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(36vw, 660px);
+      min-height: min(44vh, 420px);
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .welcome-card {
+      width: min(100%, 640px);
+      padding: clamp(18px, 3vw, 42px);
+      border: 1px solid rgba(25, 183, 185, 0.54);
+      border-radius: 20px;
+      background: rgba(5, 8, 15, 0.84);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .logo {
+      display: block;
+      width: min(190px, 24vw, 22vh);
+      height: auto;
+      margin: 0 auto clamp(12px, 2vh, 22px);
+      filter: drop-shadow(0 22px 42px rgba(0, 0, 0, 0.48));
+    }
+    .welcome-title {
+      margin: 0;
+      color: #ffffff;
+      font-size: clamp(1.8rem, min(4vw, 6.4vh), 4.4rem);
+      font-weight: 950;
+      line-height: 0.95;
+      letter-spacing: -0.07em;
+      text-shadow: 0 0 28px rgba(25, 183, 185, 0.58);
+    }
+    .welcome-subtitle {
+      margin: clamp(10px, 1.8vh, 20px) auto 0;
+      max-width: 560px;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: clamp(1rem, min(1.55vw, 2.7vh), 1.55rem);
+      font-weight: 650;
+      line-height: 1.28;
+    }
+    .status {
+      position: absolute;
+      right: clamp(16px, 2vw, 32px);
+      bottom: clamp(14px, 2vw, 28px);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.66);
+      font-size: clamp(0.72rem, 1vw, 0.95rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #19b7b9;
+      box-shadow: 0 0 18px rgba(25, 183, 185, 0.9);
+    }
+    .empty-state {
+      position: absolute;
+      left: clamp(16px, 2vw, 32px);
+      bottom: clamp(14px, 2vw, 28px);
+      z-index: 5;
+      max-width: 420px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: clamp(0.8rem, 1vw, 1rem);
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 300ms ease;
+    }
+    .empty-state.visible { opacity: 1; }
+
+    @keyframes stageSweep {
+      from { transform: translateX(0) rotate(0deg); }
+      to { transform: translateX(90px) rotate(3deg); }
+    }
+    @media (max-aspect-ratio: 4/3) {
+      .center-safe-zone { width: min(56vw, 660px); }
+      .org-name { max-width: min(42vw, 460px); }
+    }
+    @media (max-width: 760px) {
+      .center-safe-zone { width: min(86vw, 680px); min-height: auto; }
+      .welcome-card { border-radius: 18px; }
+      .org-name { max-width: 44vw; }
+    }
+  </style>
+</head>
+<body>
+  <main class="screen" aria-label="Välkomstskärm för Net at Once">
+    <section class="orbital-layer" id="nameLayer" aria-hidden="true"></section>
+    <section class="center-safe-zone" aria-label="Välkomsthälsning">
+      <div class="welcome-card" id="safeZone">
+        <img class="logo" src="net-at-once-logo.png" alt="Net at Once">
+        <h1 class="welcome-title">Välkomna till oss på Net at Once</h1>
+        <p class="welcome-subtitle">Vi är så glada att ni valt att investera tid hos oss idag, Tack!</p>
+      </div>
+    </section>
+    <div class="empty-state" id="emptyState">Väntar på organisationsnamn...</div>
+    <div class="status"><span class="status-dot"></span><span id="statusText">Uppdaterar live</span></div>
+  </main>
+
+  <script>
+    const FALLBACK_ORGANIZATIONS = [
+      "Fagnes",
+      "Eldot",
+      "InTime IT",
+      "Isicom",
+      "Neat",
+      "Microsoft",
+      "Net at Once"
+    ];
+    const REFRESH_MS = 15000;
+    const REPOSITION_MS = 13500;
+    const layer = document.getElementById("nameLayer");
+    const safeZone = document.getElementById("safeZone");
+    const statusText = document.getElementById("statusText");
+    const emptyState = document.getElementById("emptyState");
+    let organizationKey = "";
+    let organizations = [];
+    let items = [];
+    let repositionTimer = 0;
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function uniqueNames(values) {
+      const seen = new Set();
+      return values.map(value => String(value || "").trim()).filter(Boolean).filter(value => {
+        const key = normalize(value);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function safeRect() {
+      const rect = safeZone.getBoundingClientRect();
+      const paddingX = Math.max(34, window.innerWidth * 0.024);
+      const paddingY = Math.max(28, window.innerHeight * 0.038);
+      return {
+        left: rect.left - paddingX,
+        right: rect.right + paddingX,
+        top: rect.top - paddingY,
+        bottom: rect.bottom + paddingY
+      };
+    }
+
+    function rectsOverlap(a, b, gap = 0) {
+      return !(
+        a.right + gap < b.left ||
+        a.left - gap > b.right ||
+        a.bottom + gap < b.top ||
+        a.top - gap > b.bottom
+      );
+    }
+
+    function randomBetween(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function shuffle(values) {
+      return values
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(item => item.value);
+    }
+
+    function availableZones(protectedRect) {
+      const marginX = Math.max(46, window.innerWidth * 0.028);
+      const marginY = Math.max(42, window.innerHeight * 0.045);
+      const gap = Math.max(22, Math.min(window.innerWidth, window.innerHeight) * 0.02);
+      return [
+        { x1: marginX, x2: window.innerWidth - marginX, y1: marginY, y2: protectedRect.top - gap },
+        { x1: marginX, x2: protectedRect.left - gap, y1: marginY, y2: window.innerHeight - marginY },
+        { x1: protectedRect.right + gap, x2: window.innerWidth - marginX, y1: marginY, y2: window.innerHeight - marginY },
+        { x1: marginX, x2: window.innerWidth - marginX, y1: protectedRect.bottom + gap, y2: window.innerHeight - marginY },
+        { x1: marginX, x2: protectedRect.left - gap, y1: marginY, y2: protectedRect.top - gap },
+        { x1: protectedRect.right + gap, x2: window.innerWidth - marginX, y1: marginY, y2: protectedRect.top - gap },
+        { x1: marginX, x2: protectedRect.left - gap, y1: protectedRect.bottom + gap, y2: window.innerHeight - marginY },
+        { x1: protectedRect.right + gap, x2: window.innerWidth - marginX, y1: protectedRect.bottom + gap, y2: window.innerHeight - marginY }
+      ].filter(zone => zone.x2 - zone.x1 > 80 && zone.y2 - zone.y1 > 54);
+    }
+
+    function fontSizeFor(name, total, randomFactor = 1) {
+      const base = Math.max(24, Math.min(window.innerWidth, window.innerHeight) * 0.044);
+      const crowding = total > 36 ? 0.5 : total > 26 ? 0.62 : total > 18 ? 0.78 : total > 10 ? 0.92 : 1;
+      const lengthPenalty = name.length > 24 ? 0.72 : name.length > 16 ? 0.86 : 1;
+      return Math.max(12, Math.min(62, base * crowding * lengthPenalty * randomFactor));
+    }
+
+    function estimatedBox(name, size, x, y, angle = 0) {
+      const maxWidth = Math.min(window.innerWidth * 0.24, 430);
+      const naturalWidth = Math.max(size * 3.2, name.length * size * 0.64);
+      const width = Math.min(maxWidth, naturalWidth);
+      const lines = Math.max(1, Math.ceil(naturalWidth / maxWidth));
+      const height = size * (lines * 1.12);
+      const radians = Math.abs(angle) * Math.PI / 180;
+      const rotatedWidth = width * Math.cos(radians) + height * Math.sin(radians);
+      const rotatedHeight = width * Math.sin(radians) + height * Math.cos(radians);
+      return {
+        left: x - rotatedWidth / 2,
+        right: x + rotatedWidth / 2,
+        top: y - rotatedHeight / 2,
+        bottom: y + rotatedHeight / 2,
+        width: rotatedWidth,
+        height: rotatedHeight
+      };
+    }
+
+    function fitsInZone(rect, zone) {
+      return rect.left >= zone.x1 && rect.right <= zone.x2 && rect.top >= zone.y1 && rect.bottom <= zone.y2;
+    }
+
+    function candidateFor(item, zones, protectedRect, placedRects, size, gap, angle) {
+      const orderedZones = shuffle(zones);
+      for (const zone of orderedZones) {
+        const sample = estimatedBox(item.name, size, 0, 0, angle);
+        const stepX = Math.max(34, Math.min(sample.width + gap, 180));
+        const stepY = Math.max(28, sample.height + gap);
+        const cols = Math.max(1, Math.floor((zone.x2 - zone.x1) / stepX));
+        const rows = Math.max(1, Math.floor((zone.y2 - zone.y1) / stepY));
+        const candidates = [];
+        for (let col = 0; col < cols; col += 1) {
+          for (let row = 0; row < rows; row += 1) {
+            candidates.push({
+              x: zone.x1 + ((col + randomBetween(0.18, 0.82)) / cols) * (zone.x2 - zone.x1),
+              y: zone.y1 + ((row + randomBetween(0.18, 0.82)) / rows) * (zone.y2 - zone.y1)
+            });
+          }
+        }
+        for (let attempt = 0; attempt < 180; attempt += 1) {
+          candidates.push({ x: randomBetween(zone.x1, zone.x2), y: randomBetween(zone.y1, zone.y2) });
+        }
+        for (const point of shuffle(candidates)) {
+          const x = Math.max(zone.x1 + sample.width / 2, Math.min(zone.x2 - sample.width / 2, point.x));
+          const y = Math.max(zone.y1 + sample.height / 2, Math.min(zone.y2 - sample.height / 2, point.y));
+          const rect = estimatedBox(item.name, size, x, y, angle);
+          const overlapsName = placedRects.some(placed => rectsOverlap(rect, placed, gap));
+          if (fitsInZone(rect, zone) && !rectsOverlap(rect, protectedRect, gap) && !overlapsName) {
+            return { x, y, rect };
+          }
+        }
+      }
+      return null;
+    }
+
+    function layoutItems() {
+      const protectedRect = safeRect();
+      const zones = availableZones(protectedRect);
+      const placedRects = [];
+      const positions = new Array(items.length);
+      const baseGap = Math.max(18, Math.min(window.innerWidth, window.innerHeight) * 0.018);
+      const orderedItems = items
+        .map((item, index) => {
+          const randomFactor = randomBetween(0.72, 1.42);
+          const angle = 0;
+          return { item, index, angle, baseSize: fontSizeFor(item.name, items.length, randomFactor) };
+        })
+        .sort((a, b) => b.baseSize * b.item.name.length - a.baseSize * a.item.name.length);
+
+      orderedItems.forEach(entry => {
+        let size = entry.baseSize;
+        let candidate = null;
+        let gap = baseGap;
+        for (let pass = 0; pass < 8 && !candidate; pass += 1) {
+          const nextCandidate = candidateFor(entry.item, zones, protectedRect, placedRects, size, gap, entry.angle);
+          if (nextCandidate) candidate = { ...nextCandidate, size };
+          size = Math.max(11, size * 0.88);
+          gap = Math.max(8, gap * 0.78);
+        }
+        if (!candidate) {
+          const zone = zones[entry.index % Math.max(1, zones.length)] || { x1: 90, x2: window.innerWidth - 90, y1: 70, y2: window.innerHeight - 70 };
+          const x = (zone.x1 + zone.x2) / 2;
+          const y = (zone.y1 + zone.y2) / 2;
+          candidate = { x, y, rect: estimatedBox(entry.item.name, size, x, y) };
+        }
+        placedRects.push(candidate.rect);
+        positions[entry.index] = {
+          x: candidate.x,
+          y: candidate.y,
+          size: candidate.size || size,
+          scale: randomBetween(0.96, 1.05).toFixed(2),
+          angle: `${entry.angle.toFixed(1)}deg`,
+          weight: Math.random() > 0.72 ? 950 : Math.random() > 0.45 ? 850 : 750,
+          tracking: `${randomBetween(-0.06, -0.015).toFixed(3)}em`
+        };
+      });
+      return positions;
+    }
+
+    function applyItemPosition(item, position) {
+      item.el.style.setProperty("--x", `${position.x}px`);
+      item.el.style.setProperty("--y", `${position.y}px`);
+      item.el.style.setProperty("--size", `${position.size}px`);
+      item.el.style.setProperty("--scale", position.scale);
+      item.el.style.setProperty("--angle", position.angle);
+      item.el.style.setProperty("--weight", position.weight);
+      item.el.style.setProperty("--tracking", position.tracking);
+    }
+
+    function renderNames(nextOrganizations) {
+      organizations = nextOrganizations.length ? nextOrganizations : FALLBACK_ORGANIZATIONS;
+      emptyState.classList.toggle("visible", !nextOrganizations.length);
+      organizationKey = organizations.join("|");
+      layer.innerHTML = organizations.map(name => `<span class="org-name hidden">${escapeHtml(name)}</span>`).join("");
+      items = Array.from(layer.querySelectorAll(".org-name")).map((el, index) => ({ el, name: organizations[index] }));
+      const positions = layoutItems();
+      items.forEach((item, index) => applyItemPosition(item, positions[index]));
+      requestAnimationFrame(() => items.forEach(item => item.el.classList.remove("hidden")));
+    }
+
+    function repositionNames() {
+      if (!items.length) return;
+      items.forEach(item => item.el.classList.add("hidden"));
+      window.setTimeout(() => {
+        const positions = layoutItems();
+        items.forEach((item, index) => applyItemPosition(item, positions[index]));
+        window.setTimeout(() => items.forEach(item => item.el.classList.remove("hidden")), 80);
+      }, 920);
+    }
+
+    async function refreshOrganizations() {
+      try {
+        const response = await fetch("/api/welcome-organizations", { cache: "no-store", credentials: "same-origin" });
+        if (!response.ok) throw new Error("API svarade inte.");
+        const data = await response.json();
+        const nextOrganizations = uniqueNames(data.organizations || []);
+        const visibleOrganizations = nextOrganizations.length ? nextOrganizations : FALLBACK_ORGANIZATIONS;
+        const nextKey = visibleOrganizations.join("|");
+        statusText.textContent = `${visibleOrganizations.length} organisationer`;
+        if (nextKey !== organizationKey || !items.length) renderNames(nextOrganizations);
+      } catch (error) {
+        statusText.textContent = "Offline demo";
+        if (!items.length) renderNames([]);
+      }
+    }
+
+    refreshOrganizations();
+    setInterval(refreshOrganizations, REFRESH_MS);
+    repositionTimer = setInterval(repositionNames, REPOSITION_MS);
+    window.addEventListener("resize", () => {
+      clearInterval(repositionTimer);
+      repositionNames();
+      repositionTimer = setInterval(repositionNames, REPOSITION_MS);
+    });
+  </script>
+</body>
+</html>

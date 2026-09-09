@@ -3,11 +3,14 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { Pool } = require("pg");
+const ExcelJS = require("exceljs");
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
 const DATA_FILE = path.join(DATA_DIR, "raffle-data.json");
+const WELCOME_JSON_FILE = process.env.WELCOME_JSON_FILE || path.join(DATA_DIR, "welcome-organizations.json");
+const WELCOME_EXCEL_FILE = process.env.WELCOME_EXCEL_FILE || path.join(DATA_DIR, "welcome-organizations.xlsx");
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "123456";
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
@@ -207,8 +210,112 @@ function serveFile(req, res, requestedPath) {
   fs.createReadStream(file).pipe(res);
 }
 
+function normalizeHeader(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function uniqueOrganizations(values) {
+  const seen = new Set();
+  return values
+    .map(value => clean(value, 180))
+    .filter(Boolean)
+    .filter(value => {
+      const key = normalizeHeader(value);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function readOrganizationsFromJson(file) {
+  if (!fs.existsSync(file)) return { organizations: [], source: "" };
+  const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+  const rows = Array.isArray(parsed) ? parsed : parsed.organizations;
+  if (!Array.isArray(rows)) {
+    throw new Error(`${path.basename(file)} must contain an array or { "organizations": [...] }.`);
+  }
+  const organizations = uniqueOrganizations(rows.map(row => typeof row === "string" ? row : row?.organization || row?.organisation || row?.company || row?.name));
+  return { organizations, source: path.basename(file) };
+}
+
+async function readOrganizationsFromExcel(file) {
+  if (!fs.existsSync(file)) return { organizations: [], source: "" };
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(file);
+  const firstSheet = workbook.worksheets[0];
+  const rows = [];
+  firstSheet.eachRow({ includeEmpty: false }, row => {
+    rows.push(row.values.slice(1).map(cell => {
+      if (cell && typeof cell === "object") return cell.text || cell.result || cell.richText?.map(part => part.text).join("") || "";
+      return cell;
+    }));
+  });
+  if (!rows.length) return { organizations: [], source: path.basename(file) };
+
+  const headers = rows[0].map(normalizeHeader);
+  const preferredHeaders = ["organisation", "organization", "foretag", "company", "orgnamn", "verksamhet"];
+  let organizationIndex = headers.findIndex(header => preferredHeaders.includes(header));
+  if (organizationIndex < 0) {
+    organizationIndex = headers.findIndex(header => preferredHeaders.some(preferred => header.includes(preferred)));
+  }
+  if (organizationIndex < 0) organizationIndex = 0;
+
+  return {
+    organizations: uniqueOrganizations(rows.slice(1).map(row => row[organizationIndex])),
+    source: path.basename(file)
+  };
+}
+
+async function readWelcomeOrganizations() {
+  const warnings = [];
+  let source = "registreringar";
+  let organizations = [];
+
+  try {
+    const jsonResult = readOrganizationsFromJson(WELCOME_JSON_FILE);
+    if (jsonResult.organizations.length) {
+      organizations = jsonResult.organizations;
+      source = jsonResult.source;
+    }
+  } catch (error) {
+    warnings.push(error.message);
+  }
+
+  try {
+    const excelResult = await readOrganizationsFromExcel(WELCOME_EXCEL_FILE);
+    if (excelResult.organizations.length) {
+      organizations = excelResult.organizations;
+      source = excelResult.source;
+    }
+  } catch (error) {
+    warnings.push(error.message);
+  }
+
+  if (!organizations.length) {
+    const state = await readState();
+    organizations = uniqueOrganizations(state.registrations.map(registration => registration.organization));
+  }
+
+  return {
+    organizations,
+    count: organizations.length,
+    source,
+    updatedAt: new Date().toISOString(),
+    warnings
+  };
+}
+
 async function handleApi(req, res, pathname) {
   try {
+    if (req.method === "GET" && pathname === "/api/welcome-organizations") {
+      return json(res, 200, await readWelcomeOrganizations());
+    }
+
     if (req.method === "GET" && pathname === "/api/public-state") {
       const state = await readState();
       return json(res, 200, {
@@ -387,6 +494,7 @@ const server = http.createServer((req, res) => {
 
   if (pathname === "/health") return json(res, 200, { ok: true });
   if (pathname === "/" || pathname === "/index.html") return serveFile(req, res, "index.html");
+  if (pathname === "/welcome" || pathname === "/welcome/") return serveFile(req, res, "welcome.html");
   if (pathname === "/raffle" || pathname === "/raffle/" || pathname === "/raffle/admin" || pathname === "/raffle/draw") {
     return serveFile(req, res, "raffle.html");
   }
