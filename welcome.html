@@ -212,7 +212,7 @@
     <section class="orbital-layer" id="nameLayer" aria-hidden="true"></section>
     <section class="center-safe-zone" aria-label="Välkomsthälsning">
       <div class="welcome-card" id="safeZone">
-        <img class="logo" src="net-at-once-logo.png" alt="Net at Once">
+        <img class="logo" src="/net-at-once-logo.png" alt="Net at Once">
         <h1 class="welcome-title">Välkomna till oss på Net at Once</h1>
         <p class="welcome-subtitle">Vi är så glada att ni valt att investera tid hos oss idag, Tack!</p>
       </div>
@@ -485,10 +485,7 @@
 
     async function refreshOrganizations() {
       try {
-        let response = await fetch("/api/welcome-organizations", { cache: "no-store", credentials: "same-origin" });
-        if (!response.ok) {
-          response = await fetch("data/welcome-organizations.json", { cache: "no-store" });
-        }
+        const response = await fetch("/data/welcome-organizations.json", { cache: "no-store" });
         if (!response.ok) throw new Error("API svarade inte.");
         const data = await response.json();
         const nextOrganizations = uniqueNames(Array.isArray(data) ? data : data.organizations || []);
