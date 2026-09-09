@@ -28,8 +28,8 @@ function defaultState() {
   return {
     registrations: [],
     prizes: [
-      { id: crypto.randomUUID(), name: "Pris 1", productText: "", winnerId: "" },
-      { id: crypto.randomUUID(), name: "Pris 2", productText: "", winnerId: "" }
+      { id: crypto.randomUUID(), name: "Pris 1", productText: "", sponsorName: "", winnerId: "" },
+      { id: crypto.randomUUID(), name: "Pris 2", productText: "", sponsorName: "", winnerId: "" }
     ],
     publicUrl: ""
   };
@@ -50,6 +50,7 @@ function readState() {
       id: prize.id || crypto.randomUUID(),
       name: clean(prize.name || "Pris", 180),
       productText: clean(prize.productText, 1000),
+      sponsorName: clean(prize.sponsorName, 180),
       winnerId: prize.winnerId || ""
     })),
     publicUrl: typeof parsed.publicUrl === "string" ? parsed.publicUrl : ""
@@ -145,7 +146,8 @@ async function handleApi(req, res, pathname) {
         prizes: state.prizes.map(prize => ({
           id: prize.id,
           name: prize.name,
-          productText: prize.productText || ""
+          productText: prize.productText || "",
+          sponsorName: prize.sponsorName || ""
         })),
         publicUrl: state.publicUrl || `${publicOrigin(req)}/raffle`
       });
@@ -222,7 +224,13 @@ async function handleApi(req, res, pathname) {
       const state = readState();
       const name = clean(body.name, 180);
       if (!name) return json(res, 400, { error: "Skriv namnet på priset." });
-      state.prizes.push({ id: crypto.randomUUID(), name, productText: clean(body.productText, 1000), winnerId: "" });
+      state.prizes.push({
+        id: crypto.randomUUID(),
+        name,
+        productText: clean(body.productText, 1000),
+        sponsorName: clean(body.sponsorName, 180),
+        winnerId: ""
+      });
       writeState(state);
       return json(res, 201, state);
     }
@@ -235,6 +243,7 @@ async function handleApi(req, res, pathname) {
       if (!prize) return json(res, 404, { error: "Priset finns inte." });
       prize.name = clean(body.name, 180) || prize.name;
       prize.productText = clean(body.productText, 1000);
+      prize.sponsorName = clean(body.sponsorName, 180);
       writeState(state);
       return json(res, 200, state);
     }

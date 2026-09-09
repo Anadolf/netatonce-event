@@ -171,6 +171,8 @@
     let state = { registrations: [], prizes: [], publicUrl: "" };
     let spinTimer = 0;
     let pendingWinner = null;
+    let deleteConfirmTimer = 0;
+    let deleteConfirmUntil = 0;
 
     const route = () => location.pathname.replace(/\/$/, "");
     const isAdminRoute = () => route() === "/raffle/admin";
@@ -292,34 +294,59 @@
       const regRows = state.registrations.map(reg => `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${winners.has(reg.id) ? '<span class="pill">Vinnare</span>' : ""}</td></tr>`).join("");
       const prizeRows = state.prizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
-        return `<tr><td>${index + 1}</td><td><input data-prize-name="${prize.id}" value="${escapeHtml(prize.name)}"><textarea data-prize-text="${prize.id}" placeholder="Valfri kort produkttext till deltagarsidan">${escapeHtml(prize.productText || "")}</textarea></td><td>${winner ? escapeHtml(fullName(winner)) : '<span class="muted">Ej dragen</span>'}</td><td><button class="secondary" data-remove-prize="${prize.id}" type="button">Ta bort</button></td></tr>`;
+        return `<tr><td>${index + 1}</td><td><input data-prize-name="${prize.id}" value="${escapeHtml(prize.name)}" placeholder="Pris"><input data-prize-sponsor="${prize.id}" value="${escapeHtml(prize.sponsorName || "")}" placeholder="Sponsor/företag, valfritt"><textarea data-prize-text="${prize.id}" placeholder="Valfri kort produkttext till deltagarsidan">${escapeHtml(prize.productText || "")}</textarea></td><td>${winner ? escapeHtml(fullName(winner)) : '<span class="muted">Ej dragen</span>'}</td><td><button class="secondary" data-remove-prize="${prize.id}" type="button">Ta bort</button></td></tr>`;
       }).join("");
       shell(`
         <main class="grid">
           <section class="card span-4"><h2>Översikt</h2><div class="grid"><div class="stat span-6"><span class="muted">Deltagare</span><strong>${state.registrations.length}</strong></div><div class="stat span-6"><span class="muted">Priser</span><strong>${state.prizes.length}</strong></div></div><p class="small">Data sparas på servern och delas mellan deltagare, admin och storbild.</p><div class="row"><button id="exportExcel" class="secondary" type="button">Exportera Excel</button><button id="exportCsv" class="secondary" type="button">Exportera CSV</button><button id="logout" class="secondary" type="button">Logga ut</button></div></section>
           <section class="card span-8"><h2>QR-kod för deltagare</h2><p>QR-koden går till den publika registreringssidan.</p><div class="field"><label>Publik registreringslänk</label><input id="publicUrl" value="${escapeHtml(state.publicUrl || location.origin + "/raffle")}"></div><div class="grid"><div class="span-6"><div class="qrbox"><canvas id="qrCanvas" width="320" height="320"></canvas></div></div><div class="span-6"><label>Aktuell QR-länk</label><p id="qrLink" class="small"></p><div class="row"><button id="savePublicUrl" type="button">Uppdatera QR</button><button id="copyUrl" class="secondary" type="button">Kopiera länk</button></div></div></div></section>
-          <section class="card span-5"><h2>Priser</h2><div class="field"><label>Lägg till pris</label><input id="newPrize" placeholder="Ex. Neat Frame, Jabra Evolve3 85"><textarea id="newPrizeText" placeholder="Valfri kort produkttext som visas efter anmälan"></textarea><button id="addPrize" type="button">Lägg till</button></div><div class="table-wrap"><table class="prizes-table"><thead><tr><th>#</th><th>Pris och produkttext</th><th>Vinnare</th><th></th></tr></thead><tbody>${prizeRows || '<tr><td colspan="4" class="muted">Inga priser ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="resetDraw" class="secondary" type="button">Återställ dragning</button><button id="openDrawWindow" class="secondary" type="button">Öppna storbild i separat fönster</button></div></section>
-          <section class="card span-7"><h2>Registreringar</h2><div class="table-wrap"><table class="registrations-table"><thead><tr><th>Namn</th><th>Mail</th><th>År</th><th>Förväntningar</th><th>Kontakt</th><th>Status</th></tr></thead><tbody>${regRows || '<tr><td colspan="6" class="muted">Inga registreringar ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="deleteAll" class="danger" type="button">Radera alla registreringar</button></div></section>
+          <section class="card span-5"><h2>Priser</h2><div class="field"><label>Lägg till pris</label><input id="newPrize" placeholder="Ex. Neat Frame, Jabra Evolve3 85"><input id="newPrizeSponsor" placeholder="Sponsor/företag, valfritt"><textarea id="newPrizeText" placeholder="Valfri kort produkttext som visas efter anmälan"></textarea><button id="addPrize" type="button">Lägg till</button></div><div class="table-wrap"><table class="prizes-table"><thead><tr><th>#</th><th>Pris, sponsor och produkttext</th><th>Vinnare</th><th></th></tr></thead><tbody>${prizeRows || '<tr><td colspan="4" class="muted">Inga priser ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="resetDraw" class="secondary" type="button">Återställ dragning</button><button id="openDrawWindow" class="secondary" type="button">Öppna storbild i separat fönster</button></div></section>
+          <section class="card span-7"><h2>Registreringar</h2><div class="table-wrap"><table class="registrations-table"><thead><tr><th>Namn</th><th>Mail</th><th>År</th><th>Förväntningar</th><th>Kontakt</th><th>Status</th></tr></thead><tbody>${regRows || '<tr><td colspan="6" class="muted">Inga registreringar ännu.</td></tr>'}</tbody></table></div><div id="deleteWarning"></div><div class="row" style="margin-top:14px;"><button id="deleteAll" class="danger" type="button">Radera alla registreringar</button></div></section>
         </main>
       `, "admin");
       updateQr();
       document.getElementById("savePublicUrl").addEventListener("click", async () => { state = await api("/api/admin/public-url", { method: "PATCH", body: JSON.stringify({ publicUrl: document.getElementById("publicUrl").value.trim() }) }); updateQr(); toast("QR-länken är uppdaterad."); });
       document.getElementById("copyUrl").addEventListener("click", async () => { await navigator.clipboard.writeText(registerUrl()); toast("Länken är kopierad."); });
-      document.getElementById("addPrize").addEventListener("click", async () => { const name = document.getElementById("newPrize").value.trim(); const productText = document.getElementById("newPrizeText").value.trim(); if (!name) return toast("Skriv namnet på priset först."); await api("/api/admin/prizes", { method: "POST", body: JSON.stringify({ name, productText }) }); renderAdmin(); });
-      document.querySelectorAll("[data-prize-name], [data-prize-text]").forEach(input => input.addEventListener("change", async event => {
-        const id = event.target.dataset.prizeName || event.target.dataset.prizeText;
+      document.getElementById("addPrize").addEventListener("click", async () => { const name = document.getElementById("newPrize").value.trim(); const sponsorName = document.getElementById("newPrizeSponsor").value.trim(); const productText = document.getElementById("newPrizeText").value.trim(); if (!name) return toast("Skriv namnet på priset först."); await api("/api/admin/prizes", { method: "POST", body: JSON.stringify({ name, sponsorName, productText }) }); renderAdmin(); });
+      document.querySelectorAll("[data-prize-name], [data-prize-sponsor], [data-prize-text]").forEach(input => input.addEventListener("change", async event => {
+        const id = event.target.dataset.prizeName || event.target.dataset.prizeSponsor || event.target.dataset.prizeText;
         const name = document.querySelector(`[data-prize-name="${id}"]`).value;
+        const sponsorName = document.querySelector(`[data-prize-sponsor="${id}"]`).value;
         const productText = document.querySelector(`[data-prize-text="${id}"]`).value;
-        await api(`/api/admin/prizes/${id}`, { method: "PATCH", body: JSON.stringify({ name, productText }) });
+        await api(`/api/admin/prizes/${id}`, { method: "PATCH", body: JSON.stringify({ name, sponsorName, productText }) });
         toast("Priset är uppdaterat.");
       }));
       document.querySelectorAll("[data-remove-prize]").forEach(button => button.addEventListener("click", async event => { await api(`/api/admin/prizes/${event.target.dataset.removePrize}`, { method: "DELETE" }); renderAdmin(); }));
       document.getElementById("resetDraw").addEventListener("click", async () => { await api("/api/admin/reset-draw", { method: "POST" }); renderAdmin(); });
-      document.getElementById("deleteAll").addEventListener("click", async () => { if (!confirm("Vill du radera alla registreringar?")) return; await api("/api/admin/registrations", { method: "DELETE" }); renderAdmin(); });
+      document.getElementById("deleteAll").addEventListener("click", confirmThenDeleteRegistrations);
       document.getElementById("openDrawWindow").addEventListener("click", openDrawWindow);
       document.getElementById("logout").addEventListener("click", async () => { await api("/api/logout", { method: "POST" }); renderLogin(); });
       document.getElementById("exportCsv").addEventListener("click", exportCsv);
       document.getElementById("exportExcel").addEventListener("click", exportExcel);
+    }
+
+    async function confirmThenDeleteRegistrations() {
+      const button = document.getElementById("deleteAll");
+      const warning = document.getElementById("deleteWarning");
+      const now = Date.now();
+      if (now < deleteConfirmUntil) {
+        clearTimeout(deleteConfirmTimer);
+        deleteConfirmUntil = 0;
+        await api("/api/admin/registrations", { method: "DELETE" });
+        renderAdmin();
+        toast("Alla registreringar är raderade.");
+        return;
+      }
+
+      deleteConfirmUntil = now + 10000;
+      warning.innerHTML = `<div class="notice error">Varning: detta raderar alla registreringar och återställer dragningen. Klicka på knappen en gång till inom 10 sekunder om du verkligen vill fortsätta.</div>`;
+      button.textContent = "Ja, radera alla registreringar";
+      clearTimeout(deleteConfirmTimer);
+      deleteConfirmTimer = setTimeout(() => {
+        deleteConfirmUntil = 0;
+        if (document.getElementById("deleteAll")) button.textContent = "Radera alla registreringar";
+        if (document.getElementById("deleteWarning")) warning.innerHTML = "";
+      }, 10000);
     }
 
     async function renderDraw() {
@@ -332,7 +359,8 @@
       }
       const nextPrize = state.prizes.find(prize => !prize.winnerId);
       const drawnPrizes = state.prizes.filter(prize => prize.winnerId);
-      const sponsorThanks = `<div class="sponsor-thanks"><h3>Ett stort tack till våra prissponsorer</h3><p>Tack till Jabra och Neat som har bidragit med fina priser till dagens tävling.</p></div>`;
+      const sponsorNames = uniqueSponsors(drawnPrizes);
+      const sponsorThanks = sponsorNames.length ? `<div class="sponsor-thanks"><h3>Ett stort tack till våra prissponsorer</h3><p>Tack till ${escapeHtml(formatSponsorNames(sponsorNames))} som har bidragit med fina priser till dagens tävling.</p></div>` : "";
       const finalBoard = !nextPrize && drawnPrizes.length ? `<div class="final-title">Kvällens vinnare</div><div class="final-board">${drawnPrizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
         return `<div class="final-card" style="animation-delay:${index * 140}ms"><span class="final-prize">${escapeHtml(prize.name)}</span><span class="final-winner">${winner ? escapeHtml(fullName(winner)) : "Okänd vinnare"}</span><span class="final-organization">${winner ? escapeHtml(winner.organization) : ""}</span></div>`;
@@ -341,6 +369,22 @@
       if (finalBoard) {
         requestAnimationFrame(fitFinalScreen);
         window.onresize = fitFinalScreen;
+      }
+
+      function uniqueSponsors(prizes) {
+        const seen = new Set();
+        return prizes.map(prize => (prize.sponsorName || "").trim()).filter(name => {
+          const key = name.toLowerCase();
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
+      function formatSponsorNames(names) {
+        if (names.length <= 1) return names[0] || "";
+        if (names.length === 2) return `${names[0]} och ${names[1]}`;
+        return `${names.slice(0, -1).join(", ")} och ${names[names.length - 1]}`;
       }
       const start = () => {
         if (!nextPrize || !state.registrations.length || spinTimer || pendingWinner) return;
@@ -490,13 +534,13 @@
     }
 
     function exportCsv() {
-      const headers = ["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris"];
-      const lines = [headers, ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", ")])].map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","));
+      const headers = ["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris", "Sponsor"];
+      const lines = [headers, ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", "), state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.sponsorName || "").filter(Boolean).join(", ")])].map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","));
       download("net-at-once-registreringar.csv", lines.join("\n"), "text/csv;charset=utf-8");
     }
 
     function exportExcel() {
-      const rows = [["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris"], ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", ")])];
+      const rows = [["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris", "Sponsor"], ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", "), state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.sponsorName || "").filter(Boolean).join(", ")])];
       const html = `<!doctype html><html><head><meta charset="UTF-8"></head><body><table>${rows.map(row => `<tr>${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
       download("net-at-once-utlottning.xls", html, "application/vnd.ms-excel;charset=utf-8");
     }
