@@ -192,41 +192,6 @@
       font-weight: 650;
       line-height: 1.28;
     }
-    .status {
-      position: absolute;
-      right: clamp(16px, 2vw, 32px);
-      bottom: clamp(14px, 2vw, 28px);
-      z-index: 5;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: rgba(255, 255, 255, 0.66);
-      font-size: clamp(0.72rem, 1vw, 0.95rem);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: #19b7b9;
-      box-shadow: 0 0 18px rgba(25, 183, 185, 0.9);
-    }
-    .empty-state {
-      position: absolute;
-      left: clamp(16px, 2vw, 32px);
-      bottom: clamp(14px, 2vw, 28px);
-      z-index: 5;
-      max-width: 420px;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: clamp(0.8rem, 1vw, 1rem);
-      font-weight: 700;
-      opacity: 0;
-      transition: opacity 300ms ease;
-    }
-    .empty-state.visible { opacity: 1; }
-
     @keyframes stageSweep {
       from { transform: translateX(0) rotate(0deg); }
       to { transform: translateX(90px) rotate(3deg); }
@@ -252,26 +217,58 @@
         <p class="welcome-subtitle">Vi är så glada att ni valt att investera tid hos oss idag, Tack!</p>
       </div>
     </section>
-    <div class="empty-state" id="emptyState">Väntar på organisationsnamn...</div>
-    <div class="status"><span class="status-dot"></span><span id="statusText">Uppdaterar live</span></div>
   </main>
 
   <script>
     const FALLBACK_ORGANIZATIONS = [
-      "Fagnes",
-      "Eldot",
-      "InTime IT",
-      "Isicom",
-      "Neat",
       "Microsoft",
-      "Net at Once"
+      "Securitas",
+      "Fagnes Commercial",
+      "Net at Once Sweden",
+      "Advisory AB",
+      "Telia Sverige AB",
+      "Pingday AB",
+      "Växjö Citysamverkan AB",
+      "Local Connect",
+      "Brinova Fastigheter AB",
+      "Wexnet AB",
+      "MissionPoint AB",
+      "Skanska Sv AB",
+      "Skanska Sverige AB",
+      "Kåranäs Gård AB",
+      "Eldot AB",
+      "Bixia AB",
+      "Daturum AB",
+      "Storyals AB",
+      "NWC",
+      "Entit AB",
+      "Bostadsrättsförening",
+      "Isicom",
+      "NEAT",
+      "Rexel",
+      "Studentbostäder i Växjö AB",
+      "Småländska bil AB",
+      "Remarket Online",
+      "C.Gunnarssons Verkstads AB",
+      "Knowit",
+      "Socialdemokraterna Växjö",
+      "Tornet",
+      "Crowe Tönnervik Revision AB",
+      "Vilpe Sverige AB",
+      "Student",
+      "Småländska Bil",
+      "Nordic Wellness",
+      "Human Solutions",
+      "Liam AB",
+      "Knowit Sydost AB",
+      "Sveriges Riksdag (Moderaterna)",
+      "Luotea FM AB",
+      "Tingsryd IT AB"
     ];
     const REFRESH_MS = 15000;
     const REPOSITION_MS = 13500;
     const layer = document.getElementById("nameLayer");
     const safeZone = document.getElementById("safeZone");
-    const statusText = document.getElementById("statusText");
-    const emptyState = document.getElementById("emptyState");
     let organizationKey = "";
     let organizations = [];
     let items = [];
@@ -468,7 +465,6 @@
 
     function renderNames(nextOrganizations) {
       organizations = nextOrganizations.length ? nextOrganizations : FALLBACK_ORGANIZATIONS;
-      emptyState.classList.toggle("visible", !nextOrganizations.length);
       organizationKey = organizations.join("|");
       layer.innerHTML = organizations.map(name => `<span class="org-name hidden">${escapeHtml(name)}</span>`).join("");
       items = Array.from(layer.querySelectorAll(".org-name")).map((el, index) => ({ el, name: organizations[index] }));
@@ -498,14 +494,13 @@
         const nextOrganizations = uniqueNames(Array.isArray(data) ? data : data.organizations || []);
         const visibleOrganizations = nextOrganizations.length ? nextOrganizations : FALLBACK_ORGANIZATIONS;
         const nextKey = visibleOrganizations.join("|");
-        statusText.textContent = `${visibleOrganizations.length} organisationer`;
         if (nextKey !== organizationKey || !items.length) renderNames(nextOrganizations);
       } catch (error) {
-        statusText.textContent = "Offline demo";
         if (!items.length) renderNames([]);
       }
     }
 
+    renderNames(FALLBACK_ORGANIZATIONS);
     refreshOrganizations();
     setInterval(refreshOrganizations, REFRESH_MS);
     repositionTimer = setInterval(repositionNames, REPOSITION_MS);
