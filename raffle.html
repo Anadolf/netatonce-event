@@ -173,6 +173,16 @@
     let pendingWinner = null;
     let deleteConfirmTimer = 0;
     let deleteConfirmUntil = 0;
+    const EXCLUDED_COMPANY_DOMAINS = new Map([
+      ["netatonce.se", "Net at Once"],
+      ["eldot.se", "Eldot"],
+      ["intimeit.se", "Intime IT"],
+      ["intime-it.se", "Intime IT"],
+      ["neat.no", "NEAT"],
+      ["neatframe.com", "NEAT"],
+      ["isicom.se", "Isicom"],
+      ["microsoft.com", "Microsoft"]
+    ]);
 
     const route = () => location.pathname.replace(/\/$/, "");
     const isAdminRoute = () => route() === "/raffle/admin";
@@ -180,6 +190,19 @@
     const registerUrl = () => `${state.publicUrl || location.origin + "/raffle"}`;
     const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
     const fullName = reg => `${reg.firstName} ${reg.lastName}`.trim();
+    const formatPercent = value => Number(value || 0).toLocaleString("sv-SE", { maximumFractionDigits: 1 });
+    const emailDomain = email => {
+      const parts = String(email || "").toLowerCase().trim().split("@");
+      return parts.length === 2 ? parts[1] : "";
+    };
+    const excludedCompanyForEmail = email => {
+      const domain = emailDomain(email);
+      for (const [excludedDomain, company] of EXCLUDED_COMPANY_DOMAINS) {
+        if (domain === excludedDomain || domain.endsWith(`.${excludedDomain}`)) return company;
+      }
+      return "";
+    };
+    const isEligibleForRaffle = reg => !excludedCompanyForEmail(reg.email);
 
     async function api(path, options = {}) {
       const response = await fetch(path, {
@@ -221,6 +244,7 @@
     async function renderRegister() {
       const info = await api("/api/public-state");
       const prizeList = renderPrizeList(info.prizes || []);
+      const chance = formatPercent(info.winChancePercent);
       shell(`
         <main class="grid">
           <section class="card span-7">
@@ -240,8 +264,12 @@
           <aside class="card span-5">
             <h2>Så fungerar det</h2>
             <p>När du skickar in din anmälan är du med i utlottningen. Varje pris dras separat och helt slumpmässigt av programmet.</p>
+            <p>Anställda hos Net at Once, Eldot, Intime IT, NEAT, Isicom och Microsoft är utom tävlan. Detta kontrolleras mot e-postadressen.</p>
             <p>Arrangören kan inte se eller välja vinnare i förväg. Vinnaren avslöjas först på skärmen när dragningen körs.</p>
-            <div class="stat"><span class="muted">Registrerade just nu</span><strong>${info.count}</strong></div>
+            <div class="grid">
+              <div class="stat span-6"><span class="muted">Registrerade just nu</span><strong>${info.totalRegistrations ?? info.count}</strong></div>
+              <div class="stat span-6"><span class="muted">Vinstchans</span><strong>${chance}%</strong></div>
+            </div>
           </aside>
         </main>
       `, "register");
@@ -291,14 +319,23 @@
         return renderLogin();
       }
       const winners = new Set(state.prizes.map(prize => prize.winnerId).filter(Boolean));
-      const regRows = state.registrations.map(reg => `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${winners.has(reg.id) ? '<span class="pill">Vinnare</span>' : ""}</td></tr>`).join("");
+      const eligibleCount = state.registrations.filter(isEligibleForRaffle).length;
+      const regRows = state.registrations.map(reg => {
+        const excludedCompany = excludedCompanyForEmail(reg.email);
+        const status = winners.has(reg.id)
+          ? '<span class="pill">Vinnare</span>'
+          : excludedCompany
+            ? `<span class="pill">Utom tävlan: ${escapeHtml(excludedCompany)}</span>`
+            : '<span class="pill">Med i tävlan</span>';
+        return `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${status}</td></tr>`;
+      }).join("");
       const prizeRows = state.prizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
         return `<tr><td>${index + 1}</td><td><input data-prize-name="${prize.id}" value="${escapeHtml(prize.name)}" placeholder="Pris"><input data-prize-sponsor="${prize.id}" value="${escapeHtml(prize.sponsorName || "")}" placeholder="Sponsor/företag, valfritt"><textarea data-prize-text="${prize.id}" placeholder="Valfri kort produkttext till deltagarsidan">${escapeHtml(prize.productText || "")}</textarea></td><td>${winner ? escapeHtml(fullName(winner)) : '<span class="muted">Ej dragen</span>'}</td><td><button class="secondary" data-remove-prize="${prize.id}" type="button">Ta bort</button></td></tr>`;
       }).join("");
       shell(`
         <main class="grid">
-          <section class="card span-4"><h2>Översikt</h2><div class="grid"><div class="stat span-6"><span class="muted">Deltagare</span><strong>${state.registrations.length}</strong></div><div class="stat span-6"><span class="muted">Priser</span><strong>${state.prizes.length}</strong></div></div><p class="small">Data sparas på servern och delas mellan deltagare, admin och storbild.</p><div class="row"><button id="exportExcel" class="secondary" type="button">Exportera Excel</button><button id="exportCsv" class="secondary" type="button">Exportera CSV</button><button id="logout" class="secondary" type="button">Logga ut</button></div></section>
+          <section class="card span-4"><h2>Översikt</h2><div class="grid"><div class="stat span-6"><span class="muted">Deltagare</span><strong>${state.registrations.length}</strong></div><div class="stat span-6"><span class="muted">Tävlingsbara</span><strong>${eligibleCount}</strong></div></div><p class="small">Anställda hos Net at Once, Eldot, Intime IT, NEAT, Isicom och Microsoft markeras som utom tävlan baserat på e-postdomän och kan inte dras som vinnare.</p><div class="row"><button id="exportExcel" class="secondary" type="button">Exportera Excel</button><button id="exportCsv" class="secondary" type="button">Exportera CSV</button><button id="logout" class="secondary" type="button">Logga ut</button></div></section>
           <section class="card span-8"><h2>QR-kod för deltagare</h2><p>QR-koden går till den publika registreringssidan.</p><div class="field"><label>Publik registreringslänk</label><input id="publicUrl" value="${escapeHtml(state.publicUrl || location.origin + "/raffle")}"></div><div class="grid"><div class="span-6"><div class="qrbox"><canvas id="qrCanvas" width="320" height="320"></canvas></div></div><div class="span-6"><label>Aktuell QR-länk</label><p id="qrLink" class="small"></p><div class="row"><button id="savePublicUrl" type="button">Uppdatera QR</button><button id="copyUrl" class="secondary" type="button">Kopiera länk</button></div></div></div></section>
           <section class="card span-5"><h2>Priser</h2><div class="field"><label>Lägg till pris</label><input id="newPrize" placeholder="Ex. Neat Frame, Jabra Evolve3 85"><input id="newPrizeSponsor" placeholder="Sponsor/företag, valfritt"><textarea id="newPrizeText" placeholder="Valfri kort produkttext som visas efter anmälan"></textarea><button id="addPrize" type="button">Lägg till</button></div><div class="table-wrap"><table class="prizes-table"><thead><tr><th>#</th><th>Pris, sponsor och produkttext</th><th>Vinnare</th><th></th></tr></thead><tbody>${prizeRows || '<tr><td colspan="4" class="muted">Inga priser ännu.</td></tr>'}</tbody></table></div><div class="row" style="margin-top:14px;"><button id="resetDraw" class="secondary" type="button">Återställ dragning</button><button id="openDrawWindow" class="secondary" type="button">Öppna storbild i separat fönster</button></div></section>
           <section class="card span-7"><h2>Registreringar</h2><div class="table-wrap"><table class="registrations-table"><thead><tr><th>Namn</th><th>Mail</th><th>År</th><th>Förväntningar</th><th>Kontakt</th><th>Status</th></tr></thead><tbody>${regRows || '<tr><td colspan="6" class="muted">Inga registreringar ännu.</td></tr>'}</tbody></table></div><div id="deleteWarning"></div><div class="row" style="margin-top:14px;"><button id="deleteAll" class="danger" type="button">Radera alla registreringar</button></div></section>
@@ -359,13 +396,15 @@
       }
       const nextPrize = state.prizes.find(prize => !prize.winnerId);
       const drawnPrizes = state.prizes.filter(prize => prize.winnerId);
+      const usedWinnerIds = new Set(drawnPrizes.map(prize => prize.winnerId).filter(Boolean));
+      const eligibleRemaining = state.registrations.filter(reg => !usedWinnerIds.has(reg.id) && isEligibleForRaffle(reg));
       const sponsorNames = uniqueSponsors(drawnPrizes);
       const sponsorThanks = sponsorNames.length ? `<div class="sponsor-thanks"><h3>Ett stort tack till våra prissponsorer</h3><p>Tack till ${escapeHtml(formatSponsorNames(sponsorNames))} som har bidragit med fina priser till dagens tävling.</p></div>` : "";
       const finalBoard = !nextPrize && drawnPrizes.length ? `<div class="final-title">Kvällens vinnare</div><div class="final-board">${drawnPrizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
         return `<div class="final-card" style="animation-delay:${index * 140}ms"><span class="final-prize">${escapeHtml(prize.name)}</span><span class="final-winner">${winner ? escapeHtml(fullName(winner)) : "Okänd vinnare"}</span><span class="final-organization">${winner ? escapeHtml(winner.organization) : ""}</span></div>`;
       }).join("")}</div>${sponsorThanks}` : "";
-      app.innerHTML = `<main><section class="draw-stage"><div class="draw-content ${finalBoard ? "final-mode" : ""}"><img class="draw-logo" src="/net-at-once-logo.png" alt="Net at Once">${finalBoard || `<h2>${nextPrize ? escapeHtml(nextPrize.name) : "Alla priser är dragna"}</h2><p id="drawSub">${nextPrize ? "Klicka på skärmen eller tryck mellanslag för att starta dragningen." : "Återställ dragningen i adminvyn för att dra igen."}</p><div class="slot" id="slot"><div class="slot-name" id="slotName">${state.registrations.length ? "Klicka för att starta" : "Inga deltagare"}</div></div>`}</div></section></main>`;
+      app.innerHTML = `<main><section class="draw-stage"><div class="draw-content ${finalBoard ? "final-mode" : ""}"><img class="draw-logo" src="/net-at-once-logo.png" alt="Net at Once">${finalBoard || `<h2>${nextPrize ? escapeHtml(nextPrize.name) : "Alla priser är dragna"}</h2><p id="drawSub">${nextPrize ? "Klicka på skärmen eller tryck mellanslag för att starta dragningen. Personer utom tävlan dras inte." : "Återställ dragningen i adminvyn för att dra igen."}</p><div class="slot" id="slot"><div class="slot-name" id="slotName">${eligibleRemaining.length ? "Klicka för att starta" : "Inga tävlingsbara deltagare"}</div></div>`}</div></section></main>`;
       if (finalBoard) {
         requestAnimationFrame(fitFinalScreen);
         window.onresize = fitFinalScreen;
@@ -387,7 +426,7 @@
         return `${names.slice(0, -1).join(", ")} och ${names[names.length - 1]}`;
       }
       const start = () => {
-        if (!nextPrize || !state.registrations.length || spinTimer || pendingWinner) return;
+        if (!nextPrize || !eligibleRemaining.length || spinTimer || pendingWinner) return;
         runDraw(nextPrize);
       };
       document.querySelector(".draw-stage").addEventListener("click", start);
@@ -534,15 +573,20 @@
     }
 
     function exportCsv() {
-      const headers = ["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris", "Sponsor"];
-      const lines = [headers, ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", "), state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.sponsorName || "").filter(Boolean).join(", ")])].map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","));
+      const headers = ["Organisation", "Förnamn", "Efternamn", "Mailadress", "Tävlingsstatus", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris", "Sponsor"];
+      const lines = [headers, ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, exportStatus(reg), reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", "), state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.sponsorName || "").filter(Boolean).join(", ")])].map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","));
       download("net-at-once-registreringar.csv", lines.join("\n"), "text/csv;charset=utf-8");
     }
 
     function exportExcel() {
-      const rows = [["Organisation", "Förnamn", "Efternamn", "Mailadress", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris", "Sponsor"], ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", "), state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.sponsorName || "").filter(Boolean).join(", ")])];
+      const rows = [["Organisation", "Förnamn", "Efternamn", "Mailadress", "Tävlingsstatus", "Grundades år", "Förväntningar", "Kontakt efter eventet", "Registrerad", "Vunnet pris", "Sponsor"], ...state.registrations.map(reg => [reg.organization, reg.firstName, reg.lastName, reg.email, exportStatus(reg), reg.founded, reg.expectations, reg.contactConsent, reg.createdAt, state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.name).join(", "), state.prizes.filter(prize => prize.winnerId === reg.id).map(prize => prize.sponsorName || "").filter(Boolean).join(", ")])];
       const html = `<!doctype html><html><head><meta charset="UTF-8"></head><body><table>${rows.map(row => `<tr>${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
       download("net-at-once-utlottning.xls", html, "application/vnd.ms-excel;charset=utf-8");
+    }
+
+    function exportStatus(reg) {
+      const excludedCompany = excludedCompanyForEmail(reg.email);
+      return excludedCompany ? `Utom tävlan: ${excludedCompany}` : "Med i tävlan";
     }
 
     function download(filename, content, type) {

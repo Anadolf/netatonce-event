@@ -21,6 +21,16 @@ const pool = DATABASE_URL ? new Pool({
   max: 3
 }) : null;
 const sessions = new Set();
+const EXCLUDED_COMPANY_DOMAINS = new Map([
+  ["netatonce.se", "Net at Once"],
+  ["eldot.se", "Eldot"],
+  ["intimeit.se", "Intime IT"],
+  ["intime-it.se", "Intime IT"],
+  ["neat.no", "NEAT"],
+  ["neatframe.com", "NEAT"],
+  ["isicom.se", "Isicom"],
+  ["microsoft.com", "Microsoft"]
+]);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -192,6 +202,36 @@ function normalizeIdentity(value) {
   return clean(value, 300).toLowerCase().replace(/\s+/g, " ");
 }
 
+function emailDomain(email) {
+  const parts = clean(email, 300).toLowerCase().split("@");
+  return parts.length === 2 ? parts[1] : "";
+}
+
+function excludedCompanyForEmail(email) {
+  const domain = emailDomain(email);
+  for (const [excludedDomain, company] of EXCLUDED_COMPANY_DOMAINS) {
+    if (domain === excludedDomain || domain.endsWith(`.${excludedDomain}`)) return company;
+  }
+  return "";
+}
+
+function isEligibleForRaffle(registration) {
+  return !excludedCompanyForEmail(registration.email);
+}
+
+function publicStats(state) {
+  const totalRegistrations = state.registrations.length;
+  const excludedCount = state.registrations.filter(registration => !isEligibleForRaffle(registration)).length;
+  const prizeCount = state.prizes.length;
+  return {
+    totalRegistrations,
+    excludedCount,
+    eligibleCount: totalRegistrations - excludedCount,
+    prizeCount,
+    winChancePercent: totalRegistrations ? (prizeCount / totalRegistrations) * 100 : 0
+  };
+}
+
 function publicOrigin(req) {
   const proto = req.headers["x-forwarded-proto"] || "http";
   const host = req.headers["x-forwarded-host"] || req.headers.host;
@@ -318,8 +358,10 @@ async function handleApi(req, res, pathname) {
 
     if (req.method === "GET" && pathname === "/api/public-state") {
       const state = await readState();
+      const stats = publicStats(state);
       return json(res, 200, {
-        count: state.registrations.length,
+        count: stats.totalRegistrations,
+        ...stats,
         prizes: state.prizes.map(prize => ({
           id: prize.id,
           name: prize.name,
@@ -463,7 +505,7 @@ async function handleApi(req, res, pathname) {
           return;
         }
         const used = new Set(state.prizes.map(item => item.winnerId).filter(Boolean));
-        const candidates = state.registrations.filter(reg => !used.has(reg.id));
+        const candidates = state.registrations.filter(reg => !used.has(reg.id) && isEligibleForRaffle(reg));
         if (!candidates.length) {
           drawResult = { status: 409 };
           return;
@@ -473,7 +515,7 @@ async function handleApi(req, res, pathname) {
         drawResult = { status: 200, state, prize, winner };
       });
       if (drawResult?.status === 404) return json(res, 404, { error: "Priset finns inte eller är redan draget." });
-      if (drawResult?.status === 409) return json(res, 409, { error: "Det finns inga deltagare kvar att dra." });
+      if (drawResult?.status === 409) return json(res, 409, { error: "Det finns inga tävlingsbara deltagare kvar att dra." });
       return json(res, 200, drawResult);
     }
 
