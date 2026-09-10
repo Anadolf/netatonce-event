@@ -623,6 +623,14 @@
             background: rgba(0, 212, 255, 0.08);
             border: 1px solid rgba(0, 212, 255, 0.25);
             border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .speaker-profile:hover,
+        .speaker-profile.expanded {
+            background: rgba(0, 212, 255, 0.14);
+            border-color: rgba(0, 212, 255, 0.55);
         }
 
         .speaker-photo {
@@ -641,6 +649,31 @@
 
         .speaker-profile p {
             margin: 0;
+        }
+
+        .speaker-profile > div > p {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4;
+            overflow: hidden;
+        }
+
+        .speaker-profile.expanded > div > p {
+            display: block;
+            overflow: visible;
+        }
+
+        .speaker-profile > div::after {
+            content: 'Klicka för att läsa hela bion';
+            display: block;
+            margin-top: 0.65rem;
+            color: #00d4ff;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .speaker-profile.expanded > div::after {
+            content: 'Klicka för att visa mindre';
         }
 
         @media (max-width: 600px) {
@@ -1020,7 +1053,7 @@
             <div class="speaker-profile">
                 <img src="assets/panel-photo-placeholder.png" alt="Tillfällig porträttbild för Christoffer Jönsson" class="speaker-photo">
                 <div>
-                    <h3>Christoffer Jönsson</h3>
+                    <h3>Christoffer Jönsson · CTO</h3>
                     <p>Med över 14 års erfarenhet inom ISP-branschen och de senaste 5 åren som CTO har han haft en central roll i utveckling, drift och strategisk planering av moderna nätverks- och kommunikationslösningar. Han brinner för teknik, innovation och att skapa stabila tjänster som gör skillnad för både företag och privatpersoner. Utanför arbetet är han familjefar till två barn, gift och spenderar gärna sin fritid med löpträning, där disciplin och målmedvetenhet är lika viktiga som i yrkeslivet.</p>
                 </div>
             </div>
@@ -1037,7 +1070,7 @@
             <div class="speaker-profile">
                 <img src="assets/intime-it-speaker.png" alt="Svartvit porträttbild för InTime ITs talare" class="speaker-photo">
                 <div>
-                    <h3>InTime ITs talare</h3>
+                    <h3>InTime ITs talare · InTime IT</h3>
                     <p>Bio publiceras här när informationen är klar.</p>
                 </div>
             </div>
@@ -1098,6 +1131,12 @@
     </div>
 
     <script>
+        document.querySelectorAll('.speaker-profile').forEach((profile) => {
+            profile.addEventListener('click', () => {
+                profile.classList.toggle('expanded');
+            });
+        });
+
         function scrollToForm() {
             alert('Anmälningsformulär kommer snart. Tack för ditt intresse!');
         }
