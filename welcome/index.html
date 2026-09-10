@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Net at Once - Välkommen</title>
-  <link rel="icon" type="image/png" href="net-at-once-logo.png">
+  <link rel="icon" type="image/png" href="/net-at-once-logo.png">
   <script>
     (() => {
       const param = new URLSearchParams(window.location.search).get("scoutTheme");
@@ -120,7 +120,7 @@
       position: absolute;
       left: var(--x, 50%);
       top: var(--y, 50%);
-      max-width: min(34vw, 520px);
+      max-width: min(30vw, 470px);
       transform: translate(-50%, -50%) scale(var(--scale, 1));
       color: #ffffff;
       font-size: var(--size, clamp(1.15rem, 2vw, 2.5rem));
@@ -347,18 +347,22 @@
     }
 
     function fontSizeFor(name, total, randomFactor = 1) {
-      const base = Math.max(24, Math.min(window.innerWidth, window.innerHeight) * 0.044);
-      const crowding = total > 36 ? 0.5 : total > 26 ? 0.62 : total > 18 ? 0.78 : total > 10 ? 0.92 : 1;
-      const lengthPenalty = name.length > 24 ? 0.72 : name.length > 16 ? 0.86 : 1;
-      return Math.max(12, Math.min(62, base * crowding * lengthPenalty * randomFactor));
+      const minSide = Math.min(window.innerWidth, window.innerHeight);
+      const areaBasedSize = Math.sqrt((window.innerWidth * window.innerHeight) / Math.max(1, total)) * 0.28;
+      const viewportScale = Math.min(1, Math.max(0.72, window.innerWidth / 1080));
+      const base = Math.max(24, Math.min(minSide * 0.05, areaBasedSize, 66));
+      const crowding = total > 36 ? 0.56 : total > 26 ? 0.68 : total > 18 ? 0.84 : total > 10 ? 0.96 : 1;
+      const lengthPenalty = name.length > 24 ? 0.76 : name.length > 16 ? 0.9 : 1;
+      return Math.max(11, Math.min(70, base * viewportScale * crowding * lengthPenalty * randomFactor));
     }
 
     function estimatedBox(name, size, x, y, angle = 0) {
-      const maxWidth = Math.min(window.innerWidth * 0.24, 430);
+      const safetyScale = 1.1;
+      const maxWidth = Math.min(window.innerWidth * 0.3, 470);
       const naturalWidth = Math.max(size * 3.2, name.length * size * 0.64);
-      const width = Math.min(maxWidth, naturalWidth);
+      const width = Math.min(maxWidth, naturalWidth) * safetyScale;
       const lines = Math.max(1, Math.ceil(naturalWidth / maxWidth));
-      const height = size * (lines * 1.12);
+      const height = size * (lines * 1.12) * safetyScale;
       const radians = Math.abs(angle) * Math.PI / 180;
       const rotatedWidth = width * Math.cos(radians) + height * Math.sin(radians);
       const rotatedHeight = width * Math.sin(radians) + height * Math.cos(radians);
@@ -414,10 +418,11 @@
       const zones = availableZones(protectedRect);
       const placedRects = [];
       const positions = new Array(items.length);
-      const baseGap = Math.max(18, Math.min(window.innerWidth, window.innerHeight) * 0.018);
+      const baseGap = Math.max(34, Math.min(window.innerWidth, window.innerHeight) * 0.03);
       const orderedItems = items
         .map((item, index) => {
-          const randomFactor = randomBetween(0.72, 1.42);
+          const maxRandomFactor = window.innerWidth < 1080 ? 1.08 : 1.24;
+          const randomFactor = randomBetween(0.76, maxRandomFactor);
           const angle = 0;
           return { item, index, angle, baseSize: fontSizeFor(item.name, items.length, randomFactor) };
         })
@@ -427,11 +432,11 @@
         let size = entry.baseSize;
         let candidate = null;
         let gap = baseGap;
-        for (let pass = 0; pass < 8 && !candidate; pass += 1) {
+        for (let pass = 0; pass < 18 && !candidate; pass += 1) {
           const nextCandidate = candidateFor(entry.item, zones, protectedRect, placedRects, size, gap, entry.angle);
           if (nextCandidate) candidate = { ...nextCandidate, size };
-          size = Math.max(11, size * 0.88);
-          gap = Math.max(8, gap * 0.78);
+          size = Math.max(7, size * 0.84);
+          gap = Math.max(10, gap * 0.82);
         }
         if (!candidate) {
           const zone = zones[entry.index % Math.max(1, zones.length)] || { x1: 90, x2: window.innerWidth - 90, y1: 70, y2: window.innerHeight - 70 };
@@ -444,7 +449,7 @@
           x: candidate.x,
           y: candidate.y,
           size: candidate.size || size,
-          scale: randomBetween(0.96, 1.05).toFixed(2),
+          scale: randomBetween(0.98, 1.01).toFixed(2),
           angle: `${entry.angle.toFixed(1)}deg`,
           weight: Math.random() > 0.72 ? 950 : Math.random() > 0.45 ? 850 : 750,
           tracking: `${randomBetween(-0.06, -0.015).toFixed(3)}em`
