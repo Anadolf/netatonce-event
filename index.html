@@ -1063,7 +1063,10 @@
             <button class="modal-close" onclick="closeModal('waitlistModal')">&times;</button>
             <h2 class="modal-title">Väntelistan</h2>
             <p>Fyll i dina uppgifter för att ställa dig på väntelistan.</p>
-            <form onsubmit="sendWaitlistEmail(event)">
+            <form action="https://formsubmit.co/Kim.alden@netatonce.se" method="POST">
+                <input type="hidden" name="_subject" value="Väntelistan">
+                <input type="hidden" name="_template" value="table">
+                <input type="hidden" name="_captcha" value="false">
                 <label for="waitlistName">Namn</label>
                 <input id="waitlistName" name="name" type="text" required>
                 <label for="waitlistOrganization">Organisation</label>
@@ -1203,19 +1206,6 @@
                 profile.classList.toggle('expanded');
             });
         });
-
-        function sendWaitlistEmail(event) {
-            event.preventDefault();
-            const form = event.target;
-            const values = new FormData(form);
-            const body = [
-                `Namn: ${values.get('name')}`,
-                `Organisation: ${values.get('organization')}`,
-                `Mejladress: ${values.get('email')}`,
-                `Mobilnummer: ${values.get('mobile')}`
-            ].join('\n');
-            window.location.href = `mailto:Kim.alden@netatonce.se?subject=${encodeURIComponent('Väntelistan')}&body=${encodeURIComponent(body)}`;
-        }
 
         function scrollToForm() {
             alert('Anmälningsformulär kommer snart. Tack för ditt intresse!');
