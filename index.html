@@ -739,6 +739,32 @@
             text-decoration: underline;
         }
 
+        .modal-content form {
+            display: grid;
+            gap: 0.55rem;
+            margin-top: 1.25rem;
+        }
+
+        .modal-content label {
+            color: #ffb84d;
+            font-weight: 600;
+            margin-top: 0.35rem;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 0.75rem 0.85rem;
+            border: 1px solid rgba(0, 212, 255, 0.45);
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #0f1f35;
+            font: inherit;
+        }
+
+        .modal-content form .registration-button {
+            margin: 1rem 0 0;
+        }
+
         .panel-link {
             cursor: pointer;
             color: #00d4ff;
@@ -780,7 +806,8 @@
             <p>Förvänta dig snabba och inspirerande föreläsningar, ett engagerande panelsamtal om det moderna uppkopplade företaget och en mini-mässa där du kan uppleva lösningar, ställa frågor och knyta nya kontakter.</p>
             <p style="color: #ffb84d; font-weight: 500; font-size: 1.05rem; margin-top: 1.5rem;"><strong>Kom för inspirationen. Stanna för samtalen. Gå hem med nya idéer.</strong></p>
             <p style="color: #ffb84d; font-weight: 500; margin-top: 1rem;">✨ Plus: alla deltagare är med i utlottningen om en <strong onclick="openModal('neatPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Neat Frame</strong> och ett <strong onclick="openModal('jabraPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Jabra Evolve3 85</strong> — två verktyg som verkligen höjer arbetskvaliteten!</p>
-            <a href="https://forms.cloud.microsoft/e/SxZ6MD6iFN" target="_blank" rel="noopener noreferrer" class="registration-button">Anmäl dig här</a>
+            <p style="color: #ffb84d; font-weight: 600; margin-top: 1.25rem;">Eventet är fullbokat.</p>
+            <button type="button" class="registration-button" onclick="openModal('waitlistModal')">Anmäl dig till väntelistan</button>
         </div>
 
         <div class="sections-grid">
@@ -845,10 +872,9 @@
         </div>
 
         <div class="registration-section">
-            <h2>🎟️ Registrera dig nu!</h2>
-            <p>Anmäl dig för att säkra din plats på invigningen och minimässan.</p>
-            <p style="font-size: 0.95rem; color: #999;">Registrering krävs. Det är helt kostnadsfritt att delta!</p>
-            <a href="https://forms.cloud.microsoft/e/SxZ6MD6iFN" target="_blank" class="registration-button">Anmäl dig här</a>
+            <h2>🎟️ Eventet är fullbokat</h2>
+            <p>Det går inte längre att anmäla sig direkt, men du kan skriva upp dig på väntelistan.</p>
+            <button type="button" class="registration-button" onclick="openModal('waitlistModal')">Anmäl dig till väntelistan</button>
         </div>
 
         <div style="background: rgba(30, 50, 80, 0.8); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: 2px solid #ff9900;">
@@ -1010,6 +1036,25 @@
         </div>
     </div>
 
+    <div id="waitlistModal" class="modal" onclick="closeModalOnBackground(event, 'waitlistModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('waitlistModal')">&times;</button>
+            <h2 class="modal-title">Väntelistan</h2>
+            <p>Fyll i dina uppgifter så öppnas ett mejl till Kim på Net at Once.</p>
+            <form onsubmit="sendWaitlistEmail(event)">
+                <label for="waitlistName">Namn</label>
+                <input id="waitlistName" name="name" type="text" required>
+                <label for="waitlistOrganization">Organisation</label>
+                <input id="waitlistOrganization" name="organization" type="text" required>
+                <label for="waitlistEmail">Mejladress</label>
+                <input id="waitlistEmail" name="email" type="email" required>
+                <label for="waitlistMobile">Mobilnummer</label>
+                <input id="waitlistMobile" name="mobile" type="tel" required>
+                <button type="submit" class="registration-button">Öppna mejl till väntelistan</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modals for Panel Companies -->
     <div id="fagnesModal" class="modal company-modal" onclick="closeModalOnBackground(event, 'fagnesModal')">
         <div class="modal-content">
@@ -1136,6 +1181,19 @@
                 profile.classList.toggle('expanded');
             });
         });
+
+        function sendWaitlistEmail(event) {
+            event.preventDefault();
+            const form = event.target;
+            const values = new FormData(form);
+            const body = [
+                `Namn: ${values.get('name')}`,
+                `Organisation: ${values.get('organization')}`,
+                `Mejladress: ${values.get('email')}`,
+                `Mobilnummer: ${values.get('mobile')}`
+            ].join('\n');
+            window.location.href = `mailto:Kim.alden@netatonce.se?subject=${encodeURIComponent('Väntelistan')}&body=${encodeURIComponent(body)}`;
+        }
 
         function scrollToForm() {
             alert('Anmälningsformulär kommer snart. Tack för ditt intresse!');
