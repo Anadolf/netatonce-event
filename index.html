@@ -123,24 +123,11 @@
         }
 
         .full-booked-banner {
-            display: grid;
-            grid-template-columns: minmax(180px, 250px) 1fr;
-            gap: 1.5rem;
-            align-items: center;
             margin: 1.5rem 0;
-            padding: 1rem;
-            background: rgba(15, 31, 53, 0.72);
+            padding: 1.5rem 1.75rem;
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.16), rgba(0, 212, 255, 0.08));
             border: 1px solid rgba(255, 153, 0, 0.65);
             border-radius: 14px;
-        }
-
-        .full-booked-banner video {
-            display: block;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            border-radius: 10px;
-            background: #050a11;
         }
 
         .full-booked-banner h3 {
@@ -150,17 +137,6 @@
 
         .full-booked-banner p {
             margin-bottom: 0.75rem;
-        }
-
-        @media (max-width: 600px) {
-            .full-booked-banner {
-                grid-template-columns: 1fr;
-            }
-
-            .full-booked-banner video {
-                max-width: 280px;
-                margin: 0 auto;
-            }
         }
 
         .sections-grid {
@@ -848,15 +824,11 @@
             <p style="color: #ffb84d; font-weight: 500; font-size: 1.05rem; margin-top: 1.5rem;"><strong>Kom för inspirationen. Stanna för samtalen. Gå hem med nya idéer.</strong></p>
             <p style="color: #ffb84d; font-weight: 500; margin-top: 1rem;">✨ Plus: alla deltagare är med i utlottningen om en <strong onclick="openModal('neatPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Neat Frame</strong> och ett <strong onclick="openModal('jabraPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Jabra Evolve3 85</strong> — två verktyg som verkligen höjer arbetskvaliteten!</p>
             <div class="full-booked-banner">
-                <video controls playsinline preload="metadata">
-                    <source src="assets/net-at-once-fullbokat.mp4" type="video/mp4">
-                    Din webbläsare kan inte spela upp videon. <a href="assets/net-at-once-fullbokat.mp4">Öppna videon här.</a>
-                </video>
-                <div>
-                    <h3>Eventet är fullbokat</h3>
-                    <p>Det går inte längre att anmäla sig direkt, men du är varmt välkommen att skriva upp dig på väntelistan.</p>
-                    <button type="button" class="registration-button" onclick="openModal('waitlistModal')">Anmäl dig till väntelistan</button>
-                </div>
+                <h3>WOW – tack alla!</h3>
+                <p>Intresset för Net at Once invigning och inspirationsdag den 23 september har varit helt fantastiskt. Så fantastiskt att vi nu tyvärr måste stänga anmälan – vi är fullbokade!</p>
+                <p>Det går fortfarande bra att skriva upp sig på vår väntelista. Vi hör av oss om en plats blir ledig.</p>
+                <p>Vi ser mycket fram emot att träffa alla er som kommer. Det här blir en dag att minnas!</p>
+                <button type="button" class="registration-button" onclick="openModal('waitlistModal')">Anmäl dig till väntelistan</button>
             </div>
         </div>
 
