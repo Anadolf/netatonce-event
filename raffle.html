@@ -202,7 +202,7 @@
       }
       return "";
     };
-    const isEligibleForRaffle = reg => !excludedCompanyForEmail(reg.email);
+    const isEligibleForRaffle = reg => !reg.manuallyExcluded && !excludedCompanyForEmail(reg.email);
 
     async function api(path, options = {}) {
       const response = await fetch(path, {
@@ -324,10 +324,13 @@
         const excludedCompany = excludedCompanyForEmail(reg.email);
         const status = winners.has(reg.id)
           ? '<span class="pill">Vinnare</span>'
+          : reg.manuallyExcluded
+            ? '<span class="pill">Utom tävlan: manuellt</span>'
           : excludedCompany
             ? `<span class="pill">Utom tävlan: ${escapeHtml(excludedCompany)}</span>`
             : '<span class="pill">Med i tävlan</span>';
-        return `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${status}</td></tr>`;
+        const toggleText = reg.manuallyExcluded ? "Ta med i tävlan" : "Sätt utom tävlan";
+        return `<tr><td><strong>${escapeHtml(fullName(reg))}</strong><br><span class="muted small">${escapeHtml(reg.organization)}</span></td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.founded || "-")}</td><td>${escapeHtml(reg.expectations || "-")}</td><td>${escapeHtml(reg.contactConsent || "-")}</td><td>${status}<br><button class="secondary small" data-toggle-exclusion="${reg.id}" data-excluded="${reg.manuallyExcluded ? "true" : "false"}" type="button">${toggleText}</button></td></tr>`;
       }).join("");
       const prizeRows = state.prizes.map((prize, index) => {
         const winner = state.registrations.find(reg => reg.id === prize.winnerId);
@@ -356,6 +359,11 @@
       document.querySelectorAll("[data-remove-prize]").forEach(button => button.addEventListener("click", async event => { await api(`/api/admin/prizes/${event.target.dataset.removePrize}`, { method: "DELETE" }); renderAdmin(); }));
       document.getElementById("resetDraw").addEventListener("click", async () => { await api("/api/admin/reset-draw", { method: "POST" }); renderAdmin(); });
       document.getElementById("deleteAll").addEventListener("click", confirmThenDeleteRegistrations);
+      document.querySelectorAll("[data-toggle-exclusion]").forEach(button => button.addEventListener("click", async event => {
+        const manuallyExcluded = event.currentTarget.dataset.excluded !== "true";
+        await api(`/api/admin/registrations/${event.currentTarget.dataset.toggleExclusion}/exclusion`, { method: "PATCH", body: JSON.stringify({ manuallyExcluded }) });
+        renderAdmin();
+      }));
       document.getElementById("openDrawWindow").addEventListener("click", openDrawWindow);
       document.getElementById("logout").addEventListener("click", async () => { await api("/api/logout", { method: "POST" }); renderLogin(); });
       document.getElementById("exportCsv").addEventListener("click", exportCsv);
@@ -586,6 +594,7 @@
 
     function exportStatus(reg) {
       const excludedCompany = excludedCompanyForEmail(reg.email);
+      if (reg.manuallyExcluded) return "Utom tävlan: manuellt";
       return excludedCompany ? `Utom tävlan: ${excludedCompany}` : "Med i tävlan";
     }
 

@@ -59,7 +59,10 @@ function normalizeState(parsed) {
   const base = parsed && typeof parsed === "object" ? parsed : defaultState();
   const prizes = Array.isArray(base.prizes) && base.prizes.length ? base.prizes : defaultState().prizes;
   return {
-    registrations: Array.isArray(base.registrations) ? base.registrations : [],
+    registrations: (Array.isArray(base.registrations) ? base.registrations : []).map(registration => ({
+      ...registration,
+      manuallyExcluded: Boolean(registration.manuallyExcluded)
+    })),
     prizes: prizes.map(prize => ({
       id: prize.id || crypto.randomUUID(),
       name: clean(prize.name || "Pris", 180),
@@ -216,7 +219,7 @@ function excludedCompanyForEmail(email) {
 }
 
 function isEligibleForRaffle(registration) {
-  return !excludedCompanyForEmail(registration.email);
+  return !registration.manuallyExcluded && !excludedCompanyForEmail(registration.email);
 }
 
 function publicStats(state) {
@@ -492,6 +495,20 @@ async function handleApi(req, res, pathname) {
         state.registrations = [];
         state.prizes.forEach(prize => prize.winnerId = "");
       });
+      return json(res, 200, state);
+    }
+
+    const registrationExclusionMatch = pathname.match(/^\/api\/admin\/registrations\/([^/]+)\/exclusion$/);
+    if (registrationExclusionMatch && req.method === "PATCH") {
+      const body = await readBody(req);
+      let found = false;
+      const state = await updateState(state => {
+        const registration = state.registrations.find(item => item.id === registrationExclusionMatch[1]);
+        if (!registration) return;
+        found = true;
+        registration.manuallyExcluded = Boolean(body.manuallyExcluded);
+      });
+      if (!found) return json(res, 404, { error: "Deltagaren finns inte." });
       return json(res, 200, state);
     }
 
