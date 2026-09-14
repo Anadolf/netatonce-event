@@ -459,6 +459,87 @@
             text-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
         }
 
+        .panel-speakers-section {
+            background: rgba(30, 50, 80, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-speakers-section h2 {
+            color: #00d4ff;
+            margin-bottom: 1.25rem;
+            font-size: 1.8rem;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+        }
+
+        .panel-speakers-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 0.65rem;
+        }
+
+        .panel-speaker-card {
+            min-width: 0;
+            padding: 0.75rem 0.4rem;
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.15), rgba(0, 212, 255, 0.15));
+            border: 2px solid #ff9900;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .panel-speaker-card:hover {
+            transform: translateY(-3px);
+            border-color: #00d4ff;
+            box-shadow: 0 6px 18px rgba(0, 212, 255, 0.25);
+        }
+
+        .panel-speaker-card img {
+            width: 62px;
+            height: 62px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #00d4ff;
+            margin-bottom: 0.45rem;
+        }
+
+        .panel-speaker-card strong {
+            display: block;
+            color: #ff9900;
+            font-size: 0.78rem;
+            line-height: 1.15;
+        }
+
+        .panel-speaker-card span {
+            display: block;
+            color: #c0c0c0;
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+            line-height: 1.15;
+        }
+
+        .panel-speaker-card .panel-speaker-teaser {
+            color: #e0e0e0;
+            font-size: 0.62rem;
+            line-height: 1.2;
+            margin-top: 0.45rem;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+        }
+
+        .panel-speaker-card .panel-speaker-hint {
+            color: #00d4ff;
+            font-size: 0.62rem;
+            line-height: 1.2;
+            margin-top: 0.45rem;
+        }
+
         .exhibitors-grid {
             display: grid;
             grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -839,18 +920,25 @@
                 </div>
             </div>
 
-            <div class="section-card" onclick="openPanelModal()" style="cursor: pointer;">
-                <div class="section-header">
-                    <span>🎤 Panelsamtal</span>
-                </div>
-            </div>
-
             <div class="section-card" onclick="openModal('praktiskModal')" style="cursor: pointer;">
                 <div class="section-header">
                     <span>❓ Praktisk info</span>
                 </div>
             </div>
         </div>
+
+        <section class="panel-speakers-section" aria-labelledby="panelSpeakersTitle">
+            <h2 id="panelSpeakersTitle">🎤 Paneldeltagare</h2>
+            <div class="panel-speakers-grid">
+                <div class="panel-speaker-card" onclick="openModal('fagnes')"><img src="assets/stefan-angeskog.png" alt="Stefan Angeskog"><strong>Stefan Angeskog</strong><span>Fagnes</span><small class="panel-speaker-teaser">Bio publiceras här när informationen är klar.</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+                <div class="panel-speaker-card" onclick="openModal('eldot')"><img src="assets/henrik-runbert.jpeg" alt="Henrik Runbert"><strong>Henrik Runbert</strong><span>ELDOT</span><small class="panel-speaker-teaser">Med en praktisk bakgrund inom hantverk, bygg och företagande...</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+                <div class="panel-speaker-card" onclick="openModal('netatonce')"><img src="assets/christoffer-jonsson.jpeg" alt="Christoffer Jönsson"><strong>Christoffer Jönsson</strong><span>Net at Once</span><small class="panel-speaker-teaser">Med över 14 års erfarenhet inom ISP-branschen...</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+                <div class="panel-speaker-card" onclick="openModal('intimeit')"><img src="assets/intime-it-speaker.png" alt="Zani Kiseloski"><strong>Zani Kiseloski</strong><span>InTime IT</span><small class="panel-speaker-teaser">Zani Kiseloski presenterar InTime IT.</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+                <div class="panel-speaker-card" onclick="openModal('isicom')"><img src="assets/isicom-speaker.jpeg" alt="Boris Skoow"><strong>Boris Skoow</strong><span>ISICOM</span><small class="panel-speaker-teaser">Tekniknörd med näsa för affärer och en passion för smartare kommunikation...</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+                <div class="panel-speaker-card" onclick="openModal('neat')"><img src="assets/neat-speaker.jpeg" alt="Ashraf Mushallah"><strong>Ashraf Mushallah</strong><span>NEAT</span><small class="panel-speaker-teaser">Ashraf har över 20 års erfarenhet inom försäljning...</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+                <div class="panel-speaker-card" onclick="openModal('microsoft')"><img src="assets/ola-fagerstrom.jpeg" alt="Ola Fagerstrom"><strong>Ola Fagerstrom</strong><span>Microsoft</span><small class="panel-speaker-teaser">Ola Fagerstrom är Solution Engineer på Microsoft...</small><small class="panel-speaker-hint">Klicka för fullständig bio →</small></div>
+            </div>
+        </section>
 
         <div class="exhibitors-section">
             <h2>🏢 Utställare</h2>
@@ -1140,7 +1228,7 @@
             <div class="speaker-profile">
                 <img src="assets/intime-it-speaker.png" alt="Svartvit porträttbild för InTime ITs talare" class="speaker-photo">
                 <div>
-                    <h3>InTime ITs talare · InTime IT</h3>
+                    <h3>Zani Kiseloski · InTime IT</h3>
                     <p>Bio publiceras här när informationen är klar.</p>
                 </div>
             </div>
