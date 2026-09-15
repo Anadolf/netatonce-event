@@ -404,7 +404,8 @@
       "Tingsryd IT AB"
     ];
     const REFRESH_MS = 15000;
-    const ORG_VISIBLE_MS = 120000;
+    const ORG_REPOSITION_MS = 13500;
+    const AGENDA_INTERVAL_MS = 120000;
     const AGENDA_VISIBLE_MS = 18000;
     const TRANSITION_MS = 900;
     const screen = document.getElementById("screen");
@@ -416,6 +417,7 @@
     let items = [];
     let sceneTimer = 0;
     let isAgendaVisible = false;
+    let lastAgendaAt = Date.now();
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -636,14 +638,22 @@
       sceneTimer = 0;
     }
 
-    function scheduleAgendaInterlude() {
+    function scheduleNextScene() {
       clearSceneTimer();
-      sceneTimer = window.setTimeout(showAgendaInterlude, ORG_VISIBLE_MS);
+      sceneTimer = window.setTimeout(() => {
+        if (Date.now() - lastAgendaAt >= AGENDA_INTERVAL_MS) {
+          showAgendaInterlude();
+          return;
+        }
+        repositionNames();
+        scheduleNextScene();
+      }, ORG_REPOSITION_MS);
     }
 
     function showAgendaInterlude() {
       if (!items.length || isAgendaVisible) return;
       isAgendaVisible = true;
+      lastAgendaAt = Date.now();
       items.forEach(item => item.el.classList.add("hidden"));
       screen.classList.add("agenda-mode");
       window.setTimeout(() => agendaPanel.classList.add("visible"), TRANSITION_MS);
@@ -656,7 +666,7 @@
           window.setTimeout(() => {
             items.forEach(item => item.el.classList.remove("hidden"));
             isAgendaVisible = false;
-            scheduleAgendaInterlude();
+            scheduleNextScene();
           }, 120);
         }, TRANSITION_MS);
       }, AGENDA_VISIBLE_MS);
@@ -679,14 +689,14 @@
     renderNames(FALLBACK_ORGANIZATIONS);
     refreshOrganizations();
     setInterval(refreshOrganizations, REFRESH_MS);
-    scheduleAgendaInterlude();
+    scheduleNextScene();
     window.addEventListener("resize", () => {
       clearSceneTimer();
       agendaPanel.classList.remove("visible");
       screen.classList.remove("agenda-mode");
       isAgendaVisible = false;
       repositionNames();
-      scheduleAgendaInterlude();
+      scheduleNextScene();
     });
   </script>
 </body>
