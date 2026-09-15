@@ -157,6 +157,12 @@
       place-items: center;
       z-index: 4;
       pointer-events: none;
+      opacity: 1;
+      transition: opacity 700ms ease, transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .screen.agenda-mode .center-safe-zone {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
     }
     .welcome-card {
       width: min(100%, 640px);
@@ -192,6 +198,101 @@
       font-weight: 650;
       line-height: 1.28;
     }
+    .agenda-panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 5;
+      width: min(92vw, 1180px);
+      max-height: min(88vh, 760px);
+      padding: clamp(20px, 4vw, 52px);
+      transform: translate(-50%, -46%) scale(0.96);
+      border: 1px solid rgba(25, 183, 185, 0.54);
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(25, 183, 185, 0.2), transparent 30rem),
+        rgba(5, 8, 15, 0.84);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      color: #f6f8fb;
+      opacity: 0;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      transition: opacity 760ms ease, transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .agenda-panel.visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .agenda-kicker {
+      margin: 0 0 clamp(12px, 2vh, 20px);
+      color: rgba(25, 183, 185, 0.94);
+      font-size: clamp(0.7rem, 1vw, 0.95rem);
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(25, 183, 185, 0.48);
+    }
+    .agenda-title {
+      margin: 0 0 clamp(20px, 3vh, 34px);
+      color: #ffffff;
+      font-size: clamp(2rem, min(4.8vw, 6.4vh), 4.2rem);
+      font-weight: 950;
+      line-height: 0.96;
+      letter-spacing: -0.045em;
+      text-shadow: 0 0 28px rgba(25, 183, 185, 0.58);
+    }
+    .agenda-table {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.25fr) 1fr;
+      overflow: hidden;
+      border: 1px solid rgba(25, 183, 185, 0.28);
+      border-radius: 16px;
+      background: rgba(5, 20, 32, 0.42);
+      font-size: clamp(0.86rem, min(1.45vw, 2.2vh), 1.18rem);
+      font-weight: 650;
+    }
+    .agenda-cell {
+      min-height: clamp(34px, 5vh, 52px);
+      padding: clamp(8px, 1.35vh, 14px) clamp(10px, 1.3vw, 16px);
+      display: flex;
+      align-items: center;
+      border-right: 1px solid rgba(25, 183, 185, 0.22);
+      border-bottom: 1px solid rgba(25, 183, 185, 0.18);
+    }
+    .agenda-head {
+      background: rgba(25, 183, 185, 0.82);
+      color: #04121e;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .agenda-time {
+      color: #58d6df;
+      font-weight: 900;
+      text-shadow: 0 0 16px rgba(25, 183, 185, 0.54);
+    }
+    .agenda-break,
+    .agenda-highlight {
+      justify-content: center;
+      font-weight: 950;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .agenda-highlight {
+      background: linear-gradient(90deg, rgba(25, 183, 185, 0.9), rgba(18, 71, 158, 0.9));
+      color: #ffffff;
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.22);
+    }
+    .agenda-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: clamp(18px, 3vh, 34px);
+      color: rgba(255, 255, 255, 0.58);
+      font-size: clamp(0.58rem, 0.8vw, 0.78rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
     @keyframes stageSweep {
       from { transform: translateX(0) rotate(0deg); }
       to { transform: translateX(90px) rotate(3deg); }
@@ -199,22 +300,59 @@
     @media (max-aspect-ratio: 4/3) {
       .center-safe-zone { width: min(56vw, 660px); }
       .org-name { max-width: min(42vw, 460px); }
+      .agenda-panel { width: min(94vw, 980px); }
+      .agenda-table { grid-template-columns: minmax(112px, 0.28fr) 1fr; }
     }
     @media (max-width: 760px) {
       .center-safe-zone { width: min(86vw, 680px); min-height: auto; }
       .welcome-card { border-radius: 18px; }
       .org-name { max-width: 44vw; }
+      .agenda-panel { padding: 18px; width: 94vw; }
+      .agenda-table { grid-template-columns: 104px 1fr; }
+      .agenda-footer { display: none; }
     }
   </style>
 </head>
 <body>
-  <main class="screen" aria-label="Välkomstskärm för Net at Once">
+  <main class="screen" id="screen" aria-label="Välkomstskärm för Net at Once">
     <section class="orbital-layer" id="nameLayer" aria-hidden="true"></section>
     <section class="center-safe-zone" aria-label="Välkomsthälsning">
       <div class="welcome-card" id="safeZone">
         <img class="logo" src="/net-at-once-logo.png" alt="Net at Once">
         <h1 class="welcome-title">Välkomna till oss på Net at Once</h1>
         <p class="welcome-subtitle">Vi är så glada att ni valt att investera tid hos oss idag, Tack!</p>
+      </div>
+    </section>
+    <section class="agenda-panel" id="agendaPanel" aria-label="Agenda för dagen">
+      <p class="agenda-kicker">Program • 23 september 2026</p>
+      <h2 class="agenda-title">Agenda för dagen</h2>
+      <div class="agenda-table">
+        <div class="agenda-cell agenda-head">Tid</div>
+        <div class="agenda-cell agenda-head">Aktivitet</div>
+        <div class="agenda-cell agenda-time">12:50–13:00</div>
+        <div class="agenda-cell">Registrering och kaffe</div>
+        <div class="agenda-cell agenda-time">13:00–13:10</div>
+        <div class="agenda-cell">Stefan & Stefan inviger Net at Once lokaler</div>
+        <div class="agenda-cell agenda-time">13:10–13:20</div>
+        <div class="agenda-cell">Kim, Viktor och Henke – Net at Once affärsområden</div>
+        <div class="agenda-cell agenda-time">13:20–13:25</div>
+        <div class="agenda-cell">InTime IT</div>
+        <div class="agenda-cell agenda-time">13:25–13:30</div>
+        <div class="agenda-cell">Eldot</div>
+        <div class="agenda-cell agenda-time">13:30–13:35</div>
+        <div class="agenda-cell">Fagnes</div>
+        <div class="agenda-cell agenda-time">13:35–14:00</div>
+        <div class="agenda-cell">ISICOM och NEAT</div>
+        <div class="agenda-cell agenda-time">14:00–14:15</div>
+        <div class="agenda-cell agenda-break">Paus</div>
+        <div class="agenda-cell agenda-time agenda-highlight">14:15–15:00</div>
+        <div class="agenda-cell agenda-highlight">Paneldebatt</div>
+        <div class="agenda-cell agenda-time">15:00–17:00</div>
+        <div class="agenda-cell">Utlottning av priser samt mässa och mingel</div>
+      </div>
+      <div class="agenda-footer">
+        <span>Net at Once | Invigning & Mini Expo</span>
+        <span>23 september 2026 • Växjö</span>
       </div>
     </section>
   </main>
@@ -266,13 +404,18 @@
       "Tingsryd IT AB"
     ];
     const REFRESH_MS = 15000;
-    const REPOSITION_MS = 13500;
+    const ORG_VISIBLE_MS = 120000;
+    const AGENDA_VISIBLE_MS = 18000;
+    const TRANSITION_MS = 900;
+    const screen = document.getElementById("screen");
     const layer = document.getElementById("nameLayer");
     const safeZone = document.getElementById("safeZone");
+    const agendaPanel = document.getElementById("agendaPanel");
     let organizationKey = "";
     let organizations = [];
     let items = [];
-    let repositionTimer = 0;
+    let sceneTimer = 0;
+    let isAgendaVisible = false;
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -488,6 +631,37 @@
       }, 920);
     }
 
+    function clearSceneTimer() {
+      window.clearTimeout(sceneTimer);
+      sceneTimer = 0;
+    }
+
+    function scheduleAgendaInterlude() {
+      clearSceneTimer();
+      sceneTimer = window.setTimeout(showAgendaInterlude, ORG_VISIBLE_MS);
+    }
+
+    function showAgendaInterlude() {
+      if (!items.length || isAgendaVisible) return;
+      isAgendaVisible = true;
+      items.forEach(item => item.el.classList.add("hidden"));
+      screen.classList.add("agenda-mode");
+      window.setTimeout(() => agendaPanel.classList.add("visible"), TRANSITION_MS);
+      sceneTimer = window.setTimeout(() => {
+        agendaPanel.classList.remove("visible");
+        window.setTimeout(() => {
+          const positions = layoutItems();
+          items.forEach((item, index) => applyItemPosition(item, positions[index]));
+          screen.classList.remove("agenda-mode");
+          window.setTimeout(() => {
+            items.forEach(item => item.el.classList.remove("hidden"));
+            isAgendaVisible = false;
+            scheduleAgendaInterlude();
+          }, 120);
+        }, TRANSITION_MS);
+      }, AGENDA_VISIBLE_MS);
+    }
+
     async function refreshOrganizations() {
       try {
         const response = await fetch("/data/welcome-organizations.json", { cache: "no-store" });
@@ -505,11 +679,14 @@
     renderNames(FALLBACK_ORGANIZATIONS);
     refreshOrganizations();
     setInterval(refreshOrganizations, REFRESH_MS);
-    repositionTimer = setInterval(repositionNames, REPOSITION_MS);
+    scheduleAgendaInterlude();
     window.addEventListener("resize", () => {
-      clearInterval(repositionTimer);
+      clearSceneTimer();
+      agendaPanel.classList.remove("visible");
+      screen.classList.remove("agenda-mode");
+      isAgendaVisible = false;
       repositionNames();
-      repositionTimer = setInterval(repositionNames, REPOSITION_MS);
+      scheduleAgendaInterlude();
     });
   </script>
 </body>
