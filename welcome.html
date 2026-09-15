@@ -339,41 +339,34 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
     .speaker-card {
+      height: 100%;
+      width: 100%;
       display: grid;
-      gap: clamp(7px, 1vh, 12px);
-      text-align: left;
+      place-items: center;
     }
-    .speaker-name {
-      margin: 0;
-      color: #ffffff;
-      font-size: clamp(1.22rem, min(2.8vw, 4vh), 2.25rem);
-      font-weight: 950;
-      line-height: 0.95;
-      letter-spacing: -0.045em;
-      text-align: center;
-      text-shadow: 0 0 28px rgba(25, 183, 185, 0.58);
+    .speaker-card .person-image {
+      width: auto;
+      max-height: calc(min(38vh, 360px) - clamp(28px, 4.2vw, 52px));
     }
-    .speaker-role {
-      margin: 0;
-      color: #58d6df;
-      font-size: clamp(0.72rem, min(1.1vw, 1.75vh), 0.98rem);
-      font-weight: 900;
-      letter-spacing: 0.09em;
-      text-align: center;
-      text-transform: uppercase;
-      text-shadow: 0 0 16px rgba(25, 183, 185, 0.54);
+    .person-image {
+      max-width: 100%;
+      max-height: 100%;
+      border: 1px solid rgba(25, 183, 185, 0.28);
+      border-radius: 16px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+      object-fit: contain;
     }
-    .speaker-text {
-      margin: 0;
-      padding: clamp(10px, 1.55vh, 16px);
-      border: 1px solid rgba(25, 183, 185, 0.24);
-      border-radius: 14px;
-      background: rgba(25, 183, 185, 0.08);
-      color: rgba(255, 255, 255, 0.9);
-      font-size: clamp(0.82rem, min(1.3vw, 2vh), 1.14rem);
-      font-weight: 720;
-      line-height: 1.18;
-      text-align: center;
+    .affarsomraden-grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(6px, 1vw, 12px);
+      align-items: center;
+    }
+    .affarsomraden-grid .person-image {
+      width: 100%;
+      height: auto;
     }
     @keyframes stageSweep {
       from { transform: translateX(0) rotate(0deg); }
@@ -436,7 +429,11 @@
           </article>
           <article class="cube-face">
             <div class="cube-content">
-              <div class="speaker-card" data-speaker-card></div>
+              <div class="affarsomraden-grid">
+                <img class="person-image" src="/assets/people/kim-engstrom-alden-affarsomrade-kaxig-cube.png" alt="Kim Engström Aldén">
+                <img class="person-image" src="/assets/people/victor-rosenqvist-affarsomrade-kaxig-cube.png" alt="Victor Rosenqvist">
+                <img class="person-image" src="/assets/people/henrik-kjellberg-affarsomrade-kaxig-cube.png" alt="Henrik Kjellberg">
+              </div>
             </div>
           </article>
           <article class="cube-face">
@@ -504,63 +501,43 @@
     const layer = document.getElementById("nameLayer");
     const safeZone = document.getElementById("safeZone");
     const cubeInner = document.getElementById("cubeInner");
-    const speakerCards = Array.from(document.querySelectorAll("[data-speaker-card]"));
+    const speakerCard = document.querySelector("[data-speaker-card]");
     let organizationKey = "";
     let organizations = [];
     let items = [];
     let cubeStep = 0;
     let activeFace = 0;
-    let speakerFace = 2;
+    let speakerFace = 3;
     let lastSpeakerIndex = -1;
     let cubeTimer = 0;
     const SPEAKERS = [
       {
-        type: "Net at Once",
-        name: "Kim, Victor & Henrik",
-        role: "Affärsområden",
-        text: "Tre perspektiv på vad Net at Once gör bäst: smart teknik, rätt lösningar och full fart framåt."
+        src: "/assets/people/stefan-angeskog-panelbild-cube.png",
+        alt: "Stefan Angeskog"
       },
       {
-        type: "Paneldeltagare",
-        name: "Stefan Angeskog",
-        role: "Fagnes",
-        text: "Affärsansvarig för Kontor & Lokaler med fokus på attraktiva arbetsplatser."
+        src: "/assets/people/henrik-runbert-panelbild-cube.png",
+        alt: "Henrik Runbert"
       },
       {
-        type: "Paneldeltagare",
-        name: "Henrik Runbert",
-        role: "Eldot",
-        text: "Praktisk bakgrund inom bygg och företagande. Arbetar med el, data och fiber."
+        src: "/assets/people/christoffer-jonsson-panelbild-cube.png",
+        alt: "Christoffer Jönsson"
       },
       {
-        type: "Paneldeltagare",
-        name: "Christoffer Jönsson",
-        role: "Net at Once",
-        text: "Lång erfarenhet inom ISP och bredband för företag och privatpersoner."
+        src: "/assets/people/zani-kiseloski-panelbild-cube.png",
+        alt: "Zani Kiseloski"
       },
       {
-        type: "Talare",
-        name: "Zani Kiseloski",
-        role: "InTime IT",
-        text: "Arbetar med IT-drift, support och säkerhet för mindre företag."
+        src: "/assets/people/boris-skoow-panelbild-cube.png",
+        alt: "Boris Skoow"
       },
       {
-        type: "Talare",
-        name: "Boris Skoow",
-        role: "ISICOM",
-        text: "Hårdvara som möjliggör arbete och samarbete i en hybrid värld."
+        src: "/assets/people/ashraf-mushallah-panelbild-cube.png",
+        alt: "Ashraf Mushallah"
       },
       {
-        type: "Talare",
-        name: "Ashraf Mushallah",
-        role: "NEAT",
-        text: "Videokonferensenheter för mötesrum och hybridarbete."
-      },
-      {
-        type: "Talare",
-        name: "Ola Fagerström",
-        role: "Microsoft",
-        text: "Molnlösningar och produktivitetsverktyg för moderna organisationer."
+        src: "/assets/people/ola-fagerstrom-panelbild-cube.png",
+        alt: "Ola Fagerström"
       }
     ];
 
@@ -789,12 +766,7 @@
 
     function renderSpeakerCard(target) {
       const speaker = randomSpeaker();
-      target.innerHTML = `
-        <p class="cube-kicker">${escapeHtml(speaker.type)}</p>
-        <h2 class="speaker-name">${escapeHtml(speaker.name)}</h2>
-        <p class="speaker-role">${escapeHtml(speaker.role)}</p>
-        <p class="speaker-text">${escapeHtml(speaker.text)}</p>
-      `;
+      target.innerHTML = `<img class="person-image" src="${escapeHtml(speaker.src)}" alt="${escapeHtml(speaker.alt)}">`;
     }
 
     const FLIP_DIRECTIONS = [
@@ -838,7 +810,7 @@
       const step = sequence[cubeStep % sequence.length];
       if (step.face === "speaker") {
         speakerFace = speakerFace === 2 ? 3 : 2;
-        renderSpeakerCard(speakerCards[speakerFace - 2]);
+        if (speakerFace === 3) renderSpeakerCard(speakerCard);
         showCubeFace(speakerFace);
       } else {
         showCubeFace(step.face);
@@ -863,7 +835,7 @@
 
     renderNames(FALLBACK_ORGANIZATIONS);
     refreshOrganizations();
-    speakerCards.forEach(card => renderSpeakerCard(card));
+    renderSpeakerCard(speakerCard);
     scheduleCube();
     setInterval(refreshOrganizations, REFRESH_MS);
     setInterval(repositionNames, ORG_REPOSITION_MS);
