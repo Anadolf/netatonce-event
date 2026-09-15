@@ -590,8 +590,8 @@
 
     function safeRect() {
       const rect = safeZone.getBoundingClientRect();
-      const paddingX = Math.max(58, window.innerWidth * 0.045);
-      const paddingY = Math.max(46, window.innerHeight * 0.055);
+      const paddingX = Math.max(24, window.innerWidth * 0.018);
+      const paddingY = Math.max(38, window.innerHeight * 0.048);
       return {
         left: rect.left - paddingX,
         right: rect.right + paddingX,
@@ -633,7 +633,7 @@
         { x1: protectedRect.right + gap, x2: window.innerWidth - marginX, y1: marginY, y2: protectedRect.top - gap },
         { x1: marginX, x2: protectedRect.left - gap, y1: protectedRect.bottom + gap, y2: window.innerHeight - marginY },
         { x1: protectedRect.right + gap, x2: window.innerWidth - marginX, y1: protectedRect.bottom + gap, y2: window.innerHeight - marginY }
-      ].filter(zone => zone.x2 - zone.x1 > 80 && zone.y2 - zone.y1 > 54);
+      ].filter(zone => zone.x2 - zone.x1 > 52 && zone.y2 - zone.y1 > 46);
     }
 
     function fontSizeFor(name, total, randomFactor = 1) {
