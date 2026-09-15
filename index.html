@@ -116,6 +116,36 @@
             color: #e0e0e0;
         }
 
+        .intro-box h2 {
+            margin-bottom: 0.75rem;
+        }
+
+        .intro-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .intro-box.expanded .intro-details {
+            max-height: 900px;
+            margin-top: 1rem;
+        }
+
+        .intro-toggle {
+            background: none;
+            border: 0;
+            padding: 0;
+            color: #00d4ff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+        }
+
+        .intro-toggle:hover {
+            color: #ffb84d;
+            text-decoration: underline;
+        }
+
         .intro-box .registration-button {
             display: block;
             width: fit-content;
@@ -897,19 +927,24 @@
     </header>
 
     <div class="container">
+        <div class="full-booked-banner">
+            <h3>WOW – tack alla!</h3>
+            <p>Intresset för Net at Once invigning och inspirationsdag den 23 september har varit helt fantastiskt. Så fantastiskt att vi nu tyvärr måste stänga anmälan – vi är fullbokade!</p>
+            <p>Det går fortfarande bra att skriva upp sig på vår väntelista. Vi hör av oss om en plats blir ledig.</p>
+            <p>Vi ser mycket fram emot att träffa alla er som kommer. Det här blir en dag att minnas!</p>
+            <button type="button" class="registration-button" onclick="openModal('waitlistModal')">Anmäl dig till väntelistan</button>
+        </div>
+
         <div class="intro-box">
-            <p><strong>Den 23 september samlar vi några av de starkaste krafterna inom teknik, kommunikation, digitala arbetsplatser, fastigheter och verksamhetsutveckling under samma tak.</strong></p>
-            <p><strong>Resultatet?</strong> En eftermiddag fylld av inspiration, innovation och möten med människor som driver utvecklingen framåt.</p>
-            <p>Vi inviger våra nya lokaler, men det här handlar om mycket mer än en invigning. Det handlar om hur moderna företag skapar bättre arbetsplatser, smartare möten, säkrare verksamheter och starkare upplevelser för både medarbetare och kunder.</p>
-            <p>Förvänta dig snabba och inspirerande föreläsningar, ett engagerande panelsamtal om det moderna uppkopplade företaget och en mini-mässa där du kan uppleva lösningar, ställa frågor och knyta nya kontakter.</p>
-            <p style="color: #ffb84d; font-weight: 500; font-size: 1.05rem; margin-top: 1.5rem;"><strong>Kom för inspirationen. Stanna för samtalen. Gå hem med nya idéer.</strong></p>
-            <p style="color: #ffb84d; font-weight: 500; margin-top: 1rem;">✨ Plus: alla deltagare är med i utlottningen om en <strong onclick="openModal('neatPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Neat Frame</strong> och ett <strong onclick="openModal('jabraPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Jabra Evolve3 85</strong> — två verktyg som verkligen höjer arbetskvaliteten!</p>
-            <div class="full-booked-banner">
-                <h3>WOW – tack alla!</h3>
-                <p>Intresset för Net at Once invigning och inspirationsdag den 23 september har varit helt fantastiskt. Så fantastiskt att vi nu tyvärr måste stänga anmälan – vi är fullbokade!</p>
-                <p>Det går fortfarande bra att skriva upp sig på vår väntelista. Vi hör av oss om en plats blir ledig.</p>
-                <p>Vi ser mycket fram emot att träffa alla er som kommer. Det här blir en dag att minnas!</p>
-                <button type="button" class="registration-button" onclick="openModal('waitlistModal')">Anmäl dig till väntelistan</button>
+            <h2>Framtidens arbetsplats</h2>
+            <button type="button" class="intro-toggle" aria-expanded="false" aria-controls="introDetails">Läs mer</button>
+            <div class="intro-details" id="introDetails">
+                <p><strong>Den 23 september samlar vi några av de starkaste krafterna inom teknik, kommunikation, digitala arbetsplatser, fastigheter och verksamhetsutveckling under samma tak.</strong></p>
+                <p><strong>Resultatet?</strong> En eftermiddag fylld av inspiration, innovation och möten med människor som driver utvecklingen framåt.</p>
+                <p>Vi inviger våra nya lokaler, men det här handlar om mycket mer än en invigning. Det handlar om hur moderna företag skapar bättre arbetsplatser, smartare möten, säkrare verksamheter och starkare upplevelser för både medarbetare och kunder.</p>
+                <p>Förvänta dig snabba och inspirerande föreläsningar, ett engagerande panelsamtal om det moderna uppkopplade företaget och en mini-mässa där du kan uppleva lösningar, ställa frågor och knyta nya kontakter.</p>
+                <p style="color: #ffb84d; font-weight: 500; font-size: 1.05rem; margin-top: 1.5rem;"><strong>Kom för inspirationen. Stanna för samtalen. Gå hem med nya idéer.</strong></p>
+                <p style="color: #ffb84d; font-weight: 500; margin-top: 1rem;">✨ Plus: alla deltagare är med i utlottningen om en <strong onclick="openModal('neatPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Neat Frame</strong> och ett <strong onclick="openModal('jabraPrizeModal')" style="cursor: pointer; color: #ff9900; text-decoration: underline;">Jabra Evolve3 85</strong> — två verktyg som verkligen höjer arbetskvaliteten!</p>
             </div>
         </div>
 
@@ -1289,6 +1324,14 @@
     </div>
 
     <script>
+        document.querySelector('.intro-toggle').addEventListener('click', () => {
+            const intro = document.querySelector('.intro-box');
+            const toggle = document.querySelector('.intro-toggle');
+            const expanded = intro.classList.toggle('expanded');
+            toggle.setAttribute('aria-expanded', expanded);
+            toggle.textContent = expanded ? 'Visa mindre' : 'Läs mer';
+        });
+
         document.querySelectorAll('.speaker-profile').forEach((profile) => {
             profile.addEventListener('click', () => {
                 profile.classList.toggle('expanded');
