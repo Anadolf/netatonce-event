@@ -209,7 +209,9 @@
     .cube-face.exit-to-top { transform: translateY(-24%) rotateX(72deg); }
     .cube-content {
       width: 100%;
+      height: 100%;
       max-height: 100%;
+      min-height: 0;
     }
     .logo {
       display: block;
@@ -273,6 +275,14 @@
       margin-bottom: clamp(8px, 1.2vh, 12px);
       font-size: clamp(1.05rem, min(2.2vw, 3.1vh), 1.75rem);
       letter-spacing: -0.035em;
+    }
+    .agenda-logo {
+      position: absolute;
+      right: clamp(14px, 2vw, 24px);
+      top: clamp(12px, 1.8vw, 22px);
+      width: min(78px, 10vw, 9vh);
+      height: auto;
+      filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.42));
     }
     .agenda-cell {
       min-height: clamp(15px, 2.08vh, 22px);
@@ -338,36 +348,6 @@
       background: rgba(25, 183, 185, 0.08);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
-    .speaker-card {
-      height: 100%;
-      width: 100%;
-      display: grid;
-      place-items: center;
-    }
-    .speaker-card .person-image {
-      width: auto;
-      max-height: calc(min(38vh, 360px) - clamp(28px, 4.2vw, 52px));
-    }
-    .person-image {
-      max-width: 100%;
-      max-height: 100%;
-      border: 1px solid rgba(25, 183, 185, 0.28);
-      border-radius: 16px;
-      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
-      object-fit: contain;
-    }
-    .affarsomraden-grid {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(6px, 1vw, 12px);
-      align-items: center;
-    }
-    .affarsomraden-grid .person-image {
-      width: 100%;
-      height: auto;
-    }
     @keyframes stageSweep {
       from { transform: translateX(0) rotate(0deg); }
       to { transform: translateX(90px) rotate(3deg); }
@@ -400,6 +380,7 @@
             </div>
           </article>
           <article class="cube-face agenda-face">
+            <img class="agenda-logo" src="/net-at-once-logo.png" alt="">
             <div class="cube-content">
               <p class="agenda-kicker">Program • 23 september 2026</p>
               <h2 class="agenda-title">Agenda för dagen</h2>
@@ -425,20 +406,6 @@
                 <div class="agenda-cell agenda-time">15:00–17:00</div>
                 <div class="agenda-cell">Utlottning av priser samt mässa och mingel</div>
               </div>
-            </div>
-          </article>
-          <article class="cube-face">
-            <div class="cube-content">
-              <div class="affarsomraden-grid">
-                <img class="person-image" src="/assets/people/kim-engstrom-alden-affarsomrade-kaxig-cube.png" alt="Kim Engström Aldén">
-                <img class="person-image" src="/assets/people/victor-rosenqvist-affarsomrade-kaxig-cube.png" alt="Victor Rosenqvist">
-                <img class="person-image" src="/assets/people/henrik-kjellberg-affarsomrade-kaxig-cube.png" alt="Henrik Kjellberg">
-              </div>
-            </div>
-          </article>
-          <article class="cube-face">
-            <div class="cube-content">
-              <div class="speaker-card" data-speaker-card></div>
             </div>
           </article>
         </div>
@@ -495,51 +462,17 @@
     const REFRESH_MS = 15000;
     const ORG_REPOSITION_MS = 13500;
     const WELCOME_VISIBLE_MS = 20000;
-    const AGENDA_VISIBLE_MS = 20000;
-    const SPEAKER_VISIBLE_MS = 10000;
+    const AGENDA_VISIBLE_MS = 15000;
     const CUBE_FLIP_MS = 1200;
     const layer = document.getElementById("nameLayer");
     const safeZone = document.getElementById("safeZone");
     const cubeInner = document.getElementById("cubeInner");
-    const speakerCard = document.querySelector("[data-speaker-card]");
     let organizationKey = "";
     let organizations = [];
     let items = [];
     let cubeStep = 0;
     let activeFace = 0;
-    let speakerFace = 3;
-    let lastSpeakerIndex = -1;
     let cubeTimer = 0;
-    const SPEAKERS = [
-      {
-        src: "/assets/people/stefan-angeskog-panelbild-cube.png",
-        alt: "Stefan Angeskog"
-      },
-      {
-        src: "/assets/people/henrik-runbert-panelbild-cube.png",
-        alt: "Henrik Runbert"
-      },
-      {
-        src: "/assets/people/christoffer-jonsson-panelbild-cube.png",
-        alt: "Christoffer Jönsson"
-      },
-      {
-        src: "/assets/people/zani-kiseloski-panelbild-cube.png",
-        alt: "Zani Kiseloski"
-      },
-      {
-        src: "/assets/people/boris-skoow-panelbild-cube.png",
-        alt: "Boris Skoow"
-      },
-      {
-        src: "/assets/people/ashraf-mushallah-panelbild-cube.png",
-        alt: "Ashraf Mushallah"
-      },
-      {
-        src: "/assets/people/ola-fagerstrom-panelbild-cube.png",
-        alt: "Ola Fagerström"
-      }
-    ];
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -755,20 +688,6 @@
       }, 920);
     }
 
-    function randomSpeaker() {
-      let nextIndex = Math.floor(Math.random() * SPEAKERS.length);
-      if (SPEAKERS.length > 1 && nextIndex === lastSpeakerIndex) {
-        nextIndex = (nextIndex + 1) % SPEAKERS.length;
-      }
-      lastSpeakerIndex = nextIndex;
-      return SPEAKERS[nextIndex];
-    }
-
-    function renderSpeakerCard(target) {
-      const speaker = randomSpeaker();
-      target.innerHTML = `<img class="person-image" src="${escapeHtml(speaker.src)}" alt="${escapeHtml(speaker.alt)}">`;
-    }
-
     const FLIP_DIRECTIONS = [
       { enter: "enter-from-right", exit: "exit-to-left" },
       { enter: "enter-from-top", exit: "exit-to-bottom" },
@@ -804,17 +723,10 @@
       window.clearTimeout(cubeTimer);
       const sequence = [
         { face: 0, duration: WELCOME_VISIBLE_MS },
-        { face: 1, duration: AGENDA_VISIBLE_MS },
-        { face: "speaker", duration: SPEAKER_VISIBLE_MS }
+        { face: 1, duration: AGENDA_VISIBLE_MS }
       ];
       const step = sequence[cubeStep % sequence.length];
-      if (step.face === "speaker") {
-        speakerFace = speakerFace === 2 ? 3 : 2;
-        if (speakerFace === 3) renderSpeakerCard(speakerCard);
-        showCubeFace(speakerFace);
-      } else {
-        showCubeFace(step.face);
-      }
+      showCubeFace(step.face);
       cubeStep += 1;
       cubeTimer = window.setTimeout(scheduleCube, step.duration);
     }
@@ -835,7 +747,6 @@
 
     renderNames(FALLBACK_ORGANIZATIONS);
     refreshOrganizations();
-    renderSpeakerCard(speakerCard);
     scheduleCube();
     setInterval(refreshOrganizations, REFRESH_MS);
     setInterval(repositionNames, ORG_REPOSITION_MS);
